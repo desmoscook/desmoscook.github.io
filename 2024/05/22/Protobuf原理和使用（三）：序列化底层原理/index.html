@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="Protobuf 编码原理https:&#x2F;&#x2F;protobuf.dev&#x2F;programming-guides&#x2F;encoding&#x2F; 首先在这里简要的介绍一下 Protobuf 的编码原理，后续会详细的解析，对于一个数字，是如何一步一步的被编码成二进制数据的。 Protobuf 使用 TLV 的编码格式进行编码，即 Tag-Length-Value （其中 Length 可选）。其中每个字段都使用 TLV">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Protobuf原理和使用（三）：序列化底层原理">
+<meta property="og:url" content="http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="desmoscook">
+<meta property="og:description" content="Protobuf 编码原理https:&#x2F;&#x2F;protobuf.dev&#x2F;programming-guides&#x2F;encoding&#x2F; 首先在这里简要的介绍一下 Protobuf 的编码原理，后续会详细的解析，对于一个数字，是如何一步一步的被编码成二进制数据的。 Protobuf 使用 TLV 的编码格式进行编码，即 Tag-Length-Value （其中 Length 可选）。其中每个字段都使用 TLV">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-05-22T14:41:01.000Z">
+<meta property="article:modified_time" content="2024-07-28T09:22:26.330Z">
+<meta property="article:author" content="desmoscook">
+<meta property="article:tag" content="protobuf">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>Protobuf原理和使用（三）：序列化底层原理</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2024/05/28/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%8F%8D%E5%B0%84/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/05/15/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%BA%8C%EF%BC%89%EF%BC%9A%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&text=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&is_video=false&description=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Protobuf原理和使用（三）：序列化底层原理&body=Check out this article: http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&name=Protobuf原理和使用（三）：序列化底层原理&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&t=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E7%BC%96%E7%A0%81%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 编码原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">1.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">1.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">1.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">1.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E9%87%8D%E8%A6%81%E5%AD%97%E6%AE%B5"><span class="toc-number">2.</span> <span class="toc-text">Protobuf 重要字段</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">2.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">2.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-field"><span class="toc-number">2.3.</span> <span class="toc-text">3.field</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protbuf-TLV%E7%BC%96%E7%A0%81"><span class="toc-number">3.</span> <span class="toc-text">Protbuf TLV编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tag"><span class="toc-number">3.1.</span> <span class="toc-text">Tag</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        Protobuf原理和使用（三）：序列化底层原理
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">desmoscook</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-05-22T14:41:01.000Z" class="dt-published" itemprop="datePublished">2024-05-22</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/protobuf/" rel="tag">protobuf</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="Protobuf-编码原理"><a href="#Protobuf-编码原理" class="headerlink" title="Protobuf 编码原理"></a>Protobuf 编码原理</h2><p><a target="_blank" rel="noopener" href="https://protobuf.dev/programming-guides/encoding/">https://protobuf.dev/programming-guides/encoding/</a></p>
+<p>首先在这里简要的介绍一下 <code>Protobuf</code> 的编码原理，后续会详细的解析，对于一个数字，是如何一步一步的被编码成二进制数据的。</p>
+<p><code>Protobuf</code> 使用 <code>TLV</code> 的编码格式进行编码，即 <code>Tag-Length-Value</code> （其中 <code>Length</code> 可选）。其中每个字段都使用 <code>TLV</code> 进行序列化，一个消息就可以看成是多个字段的 <code>TLV</code> 序列拼接成的一个二进制字节流。</p>
+<p><code>TLV</code> 的编码可以直接在二进制序列中进行边界分割，所以，这种方式组织的数据并不需要额外的分隔符来划分数据，所以序列化的效率非常高（空间效率）。</p>
+<p>对于 <code>Protobuf</code> 的编码，结合了几种实用的编码方式，这里我会先介绍这些编码方式，然后解释 <code>Protobuf</code> 是如何使用的</p>
+<h3 id="1-Varints"><a href="#1-Varints" class="headerlink" title="1.Varints"></a>1.Varints</h3><h4 id="varints-变长编码"><a href="#varints-变长编码" class="headerlink" title="varints 变长编码"></a>varints 变长编码</h4><p><code>Varint</code> 是一种变长编码，使用字节表示数字。值越小的数字使用的字节数也少，从而进行数据压缩</p>
+<p>其中每个字节用<strong>后7位存储值</strong>。每个字节的<strong>最高位</strong>用于表示<strong>后续的字节是否属于这个数字</strong>，又称为<strong>最高有效位</strong><code>MSB</code></p>
+<ul>
+<li>如果最高位<code>MSB</code>位为<code>1</code>，则表示后续字节也是该数字的一部分</li>
+<li>如果最高位<code>MSB</code>位为<code>0</code>，则表示该字节是数字的最后一个字节</li>
+</ul>
+<p>其中需要注意的是：<code>Varints</code>方法使用小端序存储（低位存储在低字节）</p>
+<h4 id="varints-例子"><a href="#varints-例子" class="headerlink" title="varints 例子"></a>varints 例子</h4><p>例一：对于这个字节，<code>msb</code> 为 <code>0</code>，所以他是一个单字节，原值为 <code>1</code></p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0000</span> <span class="number">0001</span></span><br><span class="line">^ msb</span><br></pre></td></tr></table></figure>
+
+
+
+<p>例二：对于这两个字节，第一个字节的 MSB 为 1，说明其下一个字节也用于表示当前数字。而第二个字节的 MSB 为 0，说明第二个字节是这个数字的结尾。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">96</span> <span class="number">01</span>              <span class="comment">// 十六进制</span></span><br><span class="line"><span class="number">10010110</span> <span class="number">00000001</span>  <span class="comment">// 转换成二进制</span></span><br><span class="line">^ msb    ^ msb</span><br></pre></td></tr></table></figure>
+
+<p>因此，我们可以去掉 <code>msb</code> 位，将两个字节的数据进行合并。由于 <code>varints</code> 是使用小端序进行存储的，而对于我们通常的计算方法而言，是使用大端序进行计算，所以我们再把数据转换成大端序。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">10010110</span> <span class="number">00000001</span>      <span class="comment">// 原始数据</span></span><br><span class="line"><span class="number">0010110</span> <span class="number">0000001</span>        <span class="comment">// 去掉 msb 位</span></span><br><span class="line"><span class="number">0000001</span> <span class="number">0010110</span>        <span class="comment">// 转换成大端序</span></span><br><span class="line"><span class="number">128</span> + <span class="number">16</span> + <span class="number">4</span> + <span class="number">2</span> = <span class="number">150</span> <span class="comment">// 计算出结果</span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="2-Zigzag-编码"><a href="#2-Zigzag-编码" class="headerlink" title="2. Zigzag 编码"></a>2. Zigzag 编码</h3><p><code>Varint</code> 编码的<strong>不足之处</strong>在于，由于每个字节少了一位用于标识（MSB位），所以对于负数，实际上会多使用一个字节。（需要额外的字节表示原本的最高位）</p>
+<p><code>protobuf</code> 中有 <code>sint32</code> 和 <code>sint64</code> 来表示负数，为了更好的表示负数，<code>protobuf</code> 引入<code>Zigzag</code>编码将有符号数转换为无符号数</p>
+<p><code>Zigzag</code> 编码一种边长编码方式，其<strong>使用无符号数来表示有符号数</strong>，使得绝对值小的数字都可以采用较少字节来表示，特别对表示负数的数据能更好地进行数据压缩。</p>
+<p><strong>规则</strong>为，对于一个整数 <code>n</code></p>
+<ul>
+<li>如果是<strong>正整数</strong>，则存储其绝对值的2倍。即将 n 左移一位</li>
+<li>如果为<strong>非负数</strong>，则存储其绝对值的2倍减1。即将 n 左移一位，然后数据为取反</li>
+</ul>
+<p>因此对于序列后的数字，是偶数则为正数，是奇数则为负数。相邻奇偶两数绝对值相等</p>
+<h2 id="Protobuf-重要字段"><a href="#Protobuf-重要字段" class="headerlink" title="Protobuf 重要字段"></a>Protobuf 重要字段</h2><p><code>Protobuf</code> 消息是由一些列的键值对组成的。在消息被编码后，每个键值对都会变成一条记录，其中一条记录会通过3个部分进行编码</p>
+<ul>
+<li><code>Tag</code></li>
+<li><code>Length</code></li>
+<li><code>Value</code></li>
+</ul>
+<p>因此这种编码方案又称为 <code>TLV（Tag-Length-Value）</code>编码方案。</p>
+<p>这几个部分是由3个重要的类型计算而成的，分别是 <code>field_num</code>，<code>wire_type</code> 和 <code>field</code></p>
+<h3 id="1-字段编号-field-num"><a href="#1-字段编号-field-num" class="headerlink" title="1.字段编号(field_num)"></a>1.字段编号(field_num)</h3><p>对于编写的 <code>proto</code> 文件，对于每个字段都会有一个唯一的编号，这个就是该字段的字段编号。</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">message LoginRequest &#123;</span><br><span class="line">    bytes name = <span class="number">1</span>;</span><br><span class="line">    bytes pwd = <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如这个 <code>message</code> 中，<code>name</code> 的字段编号就是 1，而 <code>pwd</code> 的字段编号就是 2</p>
+<h3 id="2-传输类型-wire-type"><a href="#2-传输类型-wire-type" class="headerlink" title="2.传输类型(wire_type)"></a>2.传输类型(wire_type)</h3><p>每个字段都会被指定一个类型，而类型和传输类型编号同样会有对应，如下表：</p>
+<ul>
+<li><code>int32</code> 类型的 <code>wire_type</code> 就是 0</li>
+<li>而 <code>string</code> 的 <code>wire_type</code> 就是 1</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>WireType</th>
+<th>Meaning</th>
+<th>Used For</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>Varint</td>
+<td>int32, int64, uint32, uint64, sint32, sint64, bool, enum</td>
+</tr>
+<tr>
+<td>1</td>
+<td>64-bit</td>
+<td>fixed64, sfixed64, double</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Length-delimited</td>
+<td>string, bytes, embedded messages, packed repeated fields</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Start group</td>
+<td>groups (deprecated)</td>
+</tr>
+<tr>
+<td>4</td>
+<td>End group</td>
+<td>groups (deprecated)</td>
+</tr>
+<tr>
+<td>5</td>
+<td>32-bit</td>
+<td>fixed32, sfixed32, float</td>
+</tr>
+</tbody></table>
+<h3 id="3-field"><a href="#3-field" class="headerlink" title="3.field"></a>3.field</h3><p><code>message</code> 由一个个字段组成，一个字段的完整的二进制描述即 <code>&lt;&lt;type,write_type&gt;,value&gt;</code> 通常称为一个<strong>field</strong>，如下图。</p>
+<p>如，对于下面定义的 <code>num</code>，假设其值设置为 200，此时这个 field 的描述为 <code>&lt;1, 0&gt; 200</code>。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">message ProtoTest &#123;</span><br><span class="line">	int32 num = 1;</span><br><span class="line">	string name = 2;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<table>
+<thead>
+<tr>
+<th><strong>wire_type</strong></th>
+<th><strong>含义</strong></th>
+<th><strong>二进制结构</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>Varints</td>
+<td>Tag-Value</td>
+</tr>
+<tr>
+<td>1、5</td>
+<td>64-bits&#x2F;32bits</td>
+<td>Tag-Value</td>
+</tr>
+<tr>
+<td>2</td>
+<td>string&#x2F;嵌套&#x2F;repeated</td>
+<td>Tag-[Length]-Value</td>
+</tr>
+</tbody></table>
+<ul>
+<li>具体而言每个field的构成为<strong>Tag-[Length]-Value</strong></li>
+<li>这里的[Length]是否需要是依据Tag最后三位的wire_type来决定的。</li>
+</ul>
+<h2 id="Protbuf-TLV编码"><a href="#Protbuf-TLV编码" class="headerlink" title="Protbuf TLV编码"></a>Protbuf TLV编码</h2><h3 id="Tag"><a href="#Tag" class="headerlink" title="Tag"></a>Tag</h3><p><code>Tag</code> 是流中的第一个数字，使用 <code>varints</code> 编码方式 进行编码</p>
+<p>其计算方法是 <code>field_num &lt;&lt; 3 | wire_type</code> (也称为每个<code>filed</code>的<code>key</code>或者键)。因此 低3位永远用来表示 <code>wire_type</code></p>
+<p>那么我们现在来计算一个完整的序列化后的字段的 Tag</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">08</span> <span class="number">96</span> <span class="number">01</span>  <span class="comment">// 原始值</span></span><br><span class="line"><span class="number">00001000</span> <span class="number">10010110</span> <span class="number">00000001</span>  <span class="comment">// 转换成二进制</span></span><br></pre></td></tr></table></figure>
+
+<p>由于第一个字符一定是 <code>varints</code> 编码的 <code>Tag</code>，而 <code>Tag</code> 的 <code>msb</code> 位是 0。所以 <code>Tag</code> 只占用一个字节</p>
+<p>且 <code>Tag = 000 1000</code>，那么我们可以根据 后三位得到 <code>wire_type = 0</code>，然后将 <code>Tag</code> 右移3位得到 <code>0001</code>，即 <code>field_num = 1</code></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E7%BC%96%E7%A0%81%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 编码原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">1.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">1.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">1.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">1.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E9%87%8D%E8%A6%81%E5%AD%97%E6%AE%B5"><span class="toc-number">2.</span> <span class="toc-text">Protobuf 重要字段</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">2.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">2.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-field"><span class="toc-number">2.3.</span> <span class="toc-text">3.field</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protbuf-TLV%E7%BC%96%E7%A0%81"><span class="toc-number">3.</span> <span class="toc-text">Protbuf TLV编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tag"><span class="toc-number">3.1.</span> <span class="toc-text">Tag</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&text=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&is_video=false&description=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Protobuf原理和使用（三）：序列化底层原理&body=Check out this article: http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&title=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&name=Protobuf原理和使用（三）：序列化底层原理&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/&t=Protobuf原理和使用（三）：序列化底层原理"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    desmoscook
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
