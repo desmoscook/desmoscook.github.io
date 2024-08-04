@@ -13,11 +13,13 @@
 <meta property="og:site_name" content="desmoscook">
 <meta property="og:description" content="对于虚函数地址，常常使用 int 进行保存。但是需要注意的是，在64位的系统中，指针通常是64位的，但是 int 还是 32 位的，所以可能会出现错误。因此尽量使用 uintptr_t 作为其类型 本文使用 long 作为其类型，也可以解决 int 位不够的情况 12345678910111213141516171819202122232425262728293031323334353637383">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://desmoscook.github.io/2024/01/23/%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%EF%BC%8C%E9%80%9A%E8%BF%87%E4%BF%AE%E6%94%B9%E8%99%9A%E8%A1%A8%E5%9C%B0%E5%9D%80%E7%90%86%E8%A7%A3/%E6%B5%8B%E8%AF%95%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%E5%9C%B0%E5%9D%80%E4%BF%AE%E6%94%B9.png">
 <meta property="article:published_time" content="2024-01-23T11:07:49.000Z">
-<meta property="article:modified_time" content="2024-07-29T18:50:51.867Z">
+<meta property="article:modified_time" content="2024-08-04T15:08:13.076Z">
 <meta property="article:author" content="desmoscook">
 <meta property="article:tag" content="C++">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://desmoscook.github.io/2024/01/23/%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%EF%BC%8C%E9%80%9A%E8%BF%87%E4%BF%AE%E6%94%B9%E8%99%9A%E8%A1%A8%E5%9C%B0%E5%9D%80%E7%90%86%E8%A7%A3/%E6%B5%8B%E8%AF%95%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%E5%9C%B0%E5%9D%80%E4%BF%AE%E6%94%B9.png">
     
     
       
@@ -162,7 +164,7 @@
 
 
 <p>调用结果如下</p>
-<p>![[attachments&#x2F;Pasted image 20240730014946.png]]</p>
+<p><img src="/2024/01/23/%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%EF%BC%8C%E9%80%9A%E8%BF%87%E4%BF%AE%E6%94%B9%E8%99%9A%E8%A1%A8%E5%9C%B0%E5%9D%80%E7%90%86%E8%A7%A3/%E6%B5%8B%E8%AF%95%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%E5%9C%B0%E5%9D%80%E4%BF%AE%E6%94%B9.png"></p>
 <p>可以看到，在第 29 行，我们调用了虚函数表第一个元素，也就是 <code>Base</code> 类中的虚函数 <code>foo()</code>，输出 <code>Base::foo()</code>。说明虚函数表的排列如我们所想。</p>
 <p>在第 43 行，我们就该了虚函数表的第一个元素的地址为 <code>print()</code> 之后，调用 <code>Base</code> 类的虚函数表的第一个函数输出了 <code>print()</code>，说明虚函数表修改成功。</p>
 
