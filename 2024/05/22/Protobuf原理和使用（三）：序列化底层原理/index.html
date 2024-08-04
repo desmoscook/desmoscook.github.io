@@ -6,16 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="HandheldFriendly" content="True">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
-    <meta name="description" content="Protobuf 序列化原理https:&#x2F;&#x2F;protobuf.dev&#x2F;programming-guides&#x2F;encoding&#x2F; 对于序列化，其实主要分为两个部分，编码 和 存储。  编码：首先序列化需要对数据进行编码，也就是将数据压缩，使其占用更少的字节，以便可以节省空间。 存储：然后就是对于压缩后的数据进行存储。对于每个编码后的字段，应该如何存储才能保证解码的时候可以正确的分离边界。这就是存储所">
+    <meta name="description" content="Protobuf 序列化原理对于序列化，其实主要分为两个部分，编码 和 存储。  编码：首先序列化需要对数据进行编码，也就是将数据压缩，使其占用更少的字节，以便可以节省空间。 存储：然后就是对于压缩后的数据进行存储。对于每个编码后的字段，应该如何存储才能保证解码的时候可以正确的分离边界。这就是存储所需要考虑的事情。   Protobuf 的编码，结合了几种实用的编码方式，这里我会先介绍这些编码方式">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Protobuf原理和使用（三）：序列化底层原理">
 <meta property="og:url" content="http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/index.html">
 <meta property="og:site_name" content="desmoscook">
-<meta property="og:description" content="Protobuf 序列化原理https:&#x2F;&#x2F;protobuf.dev&#x2F;programming-guides&#x2F;encoding&#x2F; 对于序列化，其实主要分为两个部分，编码 和 存储。  编码：首先序列化需要对数据进行编码，也就是将数据压缩，使其占用更少的字节，以便可以节省空间。 存储：然后就是对于压缩后的数据进行存储。对于每个编码后的字段，应该如何存储才能保证解码的时候可以正确的分离边界。这就是存储所">
+<meta property="og:description" content="Protobuf 序列化原理对于序列化，其实主要分为两个部分，编码 和 存储。  编码：首先序列化需要对数据进行编码，也就是将数据压缩，使其占用更少的字节，以便可以节省空间。 存储：然后就是对于压缩后的数据进行存储。对于每个编码后的字段，应该如何存储才能保证解码的时候可以正确的分离边界。这就是存储所需要考虑的事情。   Protobuf 的编码，结合了几种实用的编码方式，这里我会先介绍这些编码方式">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://desmoscook.github.io/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/TLV%E6%8B%BC%E6%8E%A5.png">
 <meta property="article:published_time" content="2024-05-22T14:41:01.000Z">
-<meta property="article:modified_time" content="2024-08-04T15:06:52.028Z">
+<meta property="article:modified_time" content="2024-08-04T17:47:21.179Z">
 <meta property="article:author" content="desmoscook">
 <meta property="article:tag" content="protobuf">
 <meta name="twitter:card" content="summary">
@@ -117,7 +117,7 @@
     
     
       <div id="toc">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%BA%8F%E5%88%97%E5%8C%96%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 序列化原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%BC%96%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">1. 编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">2.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">2.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">2.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">2.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8"><span class="toc-number">3.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">3.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">3.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-field"><span class="toc-number">3.3.</span> <span class="toc-text">3.field</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8-1"><span class="toc-number">4.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tag"><span class="toc-number">4.1.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Length"><span class="toc-number">4.2.</span> <span class="toc-text">2. Length</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90"><span class="toc-number">5.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-number">5.0.1.</span> <span class="toc-text">编码示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E5%BA%8F%E5%88%97%E5%8C%96%E7%BB%93%E6%9E%9C"><span class="toc-number">5.1.</span> <span class="toc-text">最终序列化结果</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%BA%8F%E5%88%97%E5%8C%96%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 序列化原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%BC%96%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">1. 编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">2.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">2.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">2.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">2.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%9B%BA%E5%AE%9A%E9%95%BF%E5%BA%A6%E7%BC%96%E7%A0%81-32-64-bit"><span class="toc-number">2.3.</span> <span class="toc-text">3. 固定长度编码 32&#x2F;64-bit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-string-%E7%BC%96%E7%A0%81"><span class="toc-number">2.4.</span> <span class="toc-text">4. string 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8"><span class="toc-number">3.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">3.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">3.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8-1"><span class="toc-number">4.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-TLV-%E6%A0%BC%E5%BC%8F"><span class="toc-number">4.1.</span> <span class="toc-text">1. TLV 格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Tag-%E5%AD%97%E6%AE%B5%E8%AE%A1%E7%AE%97"><span class="toc-number">4.2.</span> <span class="toc-text">2. Tag 字段计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Length-%E5%AD%97%E6%AE%B5"><span class="toc-number">4.3.</span> <span class="toc-text">3. Length 字段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-value-%E5%AD%97%E6%AE%B5"><span class="toc-number">4.4.</span> <span class="toc-text">4. value 字段</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90"><span class="toc-number">5.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-number">5.0.1.</span> <span class="toc-text">编码示例</span></a></li></ol></li></ol></li></ol>
       </div>
     
   </span>
@@ -167,8 +167,7 @@
   
 
   <div class="content e-content" itemprop="articleBody">
-    <h2 id="Protobuf-序列化原理"><a href="#Protobuf-序列化原理" class="headerlink" title="Protobuf 序列化原理"></a>Protobuf 序列化原理</h2><p><a target="_blank" rel="noopener" href="https://protobuf.dev/programming-guides/encoding/">https://protobuf.dev/programming-guides/encoding/</a></p>
-<p>对于序列化，其实主要分为两个部分，编码 和 存储。</p>
+    <h2 id="Protobuf-序列化原理"><a href="#Protobuf-序列化原理" class="headerlink" title="Protobuf 序列化原理"></a>Protobuf 序列化原理</h2><p>对于序列化，其实主要分为两个部分，编码 和 存储。</p>
 <ol>
 <li><strong>编码</strong>：首先序列化需要对数据进行编码，也就是将数据压缩，使其占用更少的字节，以便可以节省空间。</li>
 <li><strong>存储</strong>：然后就是对于压缩后的数据进行存储。对于每个编码后的字段，应该如何存储才能保证解码的时候可以正确的分离边界。这就是存储所需要考虑的事情。</li>
@@ -177,7 +176,32 @@
 <blockquote>
 <p>序列化 &#x3D; 编码 + 存储</p>
 </blockquote>
-<h2 id="1-编码"><a href="#1-编码" class="headerlink" title="1. 编码"></a>1. 编码</h2><h3 id="1-Varints"><a href="#1-Varints" class="headerlink" title="1.Varints"></a>1.Varints</h3><h4 id="varints-变长编码"><a href="#varints-变长编码" class="headerlink" title="varints 变长编码"></a>varints 变长编码</h4><p><code>Varint</code> 是一种变长编码，使用字节表示数字。值越小的数字使用的字节数也少，从而进行数据压缩</p>
+<h2 id="1-编码"><a href="#1-编码" class="headerlink" title="1. 编码"></a>1. 编码</h2><p>编码方式分为多种，如下表所示</p>
+<table>
+<thead>
+<tr>
+<th><strong>字段类型</strong></th>
+<th><strong>编码方式</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>int32, int64, uint32, uint64, sint32, sint64, bool, enum</td>
+<td>Varint</td>
+</tr>
+<tr>
+<td>fixed64, sfixed64, double</td>
+<td>64-bit</td>
+</tr>
+<tr>
+<td>string, bytes, embedded messages, packed repeated fields</td>
+<td>Length-delimited</td>
+</tr>
+<tr>
+<td>fixed32, sfixed32, float</td>
+<td>32-bit</td>
+</tr>
+</tbody></table>
+<h3 id="1-Varints"><a href="#1-Varints" class="headerlink" title="1.Varints"></a>1.Varints</h3><h4 id="varints-变长编码"><a href="#varints-变长编码" class="headerlink" title="varints 变长编码"></a>varints 变长编码</h4><p><code>Varint</code> 是一种变长编码，使用字节表示数字。值越小的数字使用的字节数也少，从而进行数据压缩</p>
 <p>其中每个字节用<strong>后7位存储值</strong>。每个字节的<strong>最高位</strong>用于表示<strong>后续的字节是否属于这个数字</strong>，又称为<strong>最高有效位</strong><code>MSB</code></p>
 <ul>
 <li>如果最高位<code>MSB</code>位为<code>1</code>，则表示后续字节也是该数字的一部分</li>
@@ -186,7 +210,6 @@
 <p>其中需要注意的是：<code>Varints</code>方法使用小端序存储（低位存储在低字节）</p>
 <h4 id="varints-例子"><a href="#varints-例子" class="headerlink" title="varints 例子"></a>varints 例子</h4><p>例一：对于这个字节，<code>msb</code> 为 <code>0</code>，所以他是一个单字节，原值为 <code>1</code></p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">0000</span> <span class="number">0001</span></span><br><span class="line">^ msb</span><br></pre></td></tr></table></figure>
-
 
 
 <p>例二：对于这两个字节，第一个字节的 MSB 为 1，说明其下一个字节也用于表示当前数字。而第二个字节的 MSB 为 0，说明第二个字节是这个数字的结尾。</p>
@@ -198,13 +221,73 @@
 
 <h3 id="2-Zigzag-编码"><a href="#2-Zigzag-编码" class="headerlink" title="2. Zigzag 编码"></a>2. Zigzag 编码</h3><p><code>Varint</code> 编码的<strong>不足之处</strong>在于，由于每个字节少了一位用于标识（MSB位），所以对于负数，实际上会多使用一个字节。（需要额外的字节表示原本的最高位）</p>
 <p><code>protobuf</code> 中有 <code>sint32</code> 和 <code>sint64</code> 来表示负数，为了更好的表示负数，<code>protobuf</code> 引入<code>Zigzag</code>编码将有符号数转换为无符号数</p>
-<p><code>Zigzag</code> 编码一种边长编码方式，其<strong>使用无符号数来表示有符号数</strong>，使得绝对值小的数字都可以采用较少字节来表示，特别对表示负数的数据能更好地进行数据压缩。</p>
+<p><code>Zigzag</code> 编码一种变长编码方式，其<strong>使用无符号数来表示有符号数</strong>，使得绝对值小的数字都可以采用较少字节来表示，特别对表示负数的数据能更好地进行数据压缩。</p>
 <p><strong>规则</strong>为，对于一个整数 <code>n</code></p>
 <ul>
 <li>如果是<strong>正整数</strong>，则存储其绝对值的2倍。即将 n 左移一位</li>
-<li>如果为<strong>非负数</strong>，则存储其绝对值的2倍减1。即将 n 左移一位，然后数据为取反</li>
+<li>如果为<strong>负数</strong>，则存储其绝对值的2倍减1。即将 n 左移一位，然后数据位取反</li>
 </ul>
 <p>因此对于序列后的数字，是偶数则为正数，是奇数则为负数。相邻奇偶两数绝对值相等</p>
+<table>
+<thead>
+<tr>
+<th>有符号整数 (<code>n</code>)</th>
+<th>原二进制表示</th>
+<th>ZigZag 二进制表示</th>
+<th>ZigZag 编码 (<code>z</code>)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td><code>00000000</code></td>
+<td><code>00000000</code></td>
+<td>0</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>00000001</code></td>
+<td><code>00000010</code></td>
+<td>2</td>
+</tr>
+<tr>
+<td>-1</td>
+<td><code>11111111</code></td>
+<td><code>00000001</code></td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>00000010</code></td>
+<td><code>00000100</code></td>
+<td>4</td>
+</tr>
+<tr>
+<td>-2</td>
+<td><code>11111110</code></td>
+<td><code>00000011</code></td>
+<td>3</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>00000011</code></td>
+<td><code>00000110</code></td>
+<td>6</td>
+</tr>
+<tr>
+<td>-3</td>
+<td><code>11111101</code></td>
+<td><code>00000101</code></td>
+<td>5</td>
+</tr>
+</tbody></table>
+<h3 id="3-固定长度编码-32-64-bit"><a href="#3-固定长度编码-32-64-bit" class="headerlink" title="3. 固定长度编码 32&#x2F;64-bit"></a>3. 固定长度编码 32&#x2F;64-bit</h3><p>固定长度编码不压缩数据，直接固定存储为 4字节 或 8字节。使用 <strong>小端序</strong> 进行存储</p>
+<p>如 <code>fixed32</code> 的 <code>150</code>，转为 <code>16</code> 进制是 <code>0x96</code>，那么最终的存储则为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">96 00 00 00 （0x96 0x00 0x00 0x00）</span><br></pre></td></tr></table></figure>
+
+<p>如 <code>fixed64</code> 类型的 <code>300</code>，转为 <code>16</code> 进制是 <code>0x12C</code>，那么最终的存储则为</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">2C 01 00 00 00 00 00 00 （0x2C 0x01 0x00 0x00 0x00 0x00 0x00 0x00）</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-string-编码"><a href="#4-string-编码" class="headerlink" title="4. string 编码"></a>4. string 编码</h3><p><code>string</code> 的编码就是我们常见的 <code>UTF-8</code></p>
 <h2 id="Protobuf-存储"><a href="#Protobuf-存储" class="headerlink" title="Protobuf 存储"></a>Protobuf 存储</h2><p><code>Protobuf</code> 消息是由一些列的键值对组成的。在消息被编码后，每个键值对都会变成一条记录，其中一条记录会通过3个部分进行编码</p>
 <ul>
 <li><code>Tag</code></li>
@@ -225,9 +308,9 @@
 <table>
 <thead>
 <tr>
-<th>WireType</th>
-<th>Meaning</th>
-<th>Used For</th>
+<th><strong>WireType</strong></th>
+<th><strong>Meaning</strong></th>
+<th><strong>Used For</strong></th>
 </tr>
 </thead>
 <tbody><tr>
@@ -261,67 +344,67 @@
 <td>fixed32, sfixed32, float</td>
 </tr>
 </tbody></table>
-<h3 id="3-field"><a href="#3-field" class="headerlink" title="3.field"></a>3.field</h3><p><code>message</code> 由一个个字段组成，一个字段的完整的二进制描述即 <code>&lt;&lt;type,write_type&gt;,value&gt;</code> 通常称为一个<strong>field</strong>，如下图。</p>
-<p>如，对于下面定义的 <code>num</code>，假设其值设置为 200，此时这个 field 的描述为 <code>&lt;1, 0&gt; 200</code>。</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">message ProtoTest &#123;</span><br><span class="line">	int32 num = 1;</span><br><span class="line">	string name = 2;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-<table>
-<thead>
-<tr>
-<th><strong>wire_type</strong></th>
-<th><strong>含义</strong></th>
-<th><strong>二进制结构</strong></th>
-</tr>
-</thead>
-<tbody><tr>
-<td>0</td>
-<td>Varints</td>
-<td>Tag-Value</td>
-</tr>
-<tr>
-<td>1、5</td>
-<td>64-bits&#x2F;32bits</td>
-<td>Tag-Value</td>
-</tr>
-<tr>
-<td>2</td>
-<td>string&#x2F;嵌套&#x2F;repeated</td>
-<td>Tag-[Length]-Value</td>
-</tr>
-</tbody></table>
-<ul>
-<li>具体而言每个field的构成为<strong>Tag-[Length]-Value</strong></li>
-<li>这里的[Length]是否需要是依据Tag最后三位的wire_type来决定的。</li>
-</ul>
-<h2 id="Protobuf-存储-1"><a href="#Protobuf-存储-1" class="headerlink" title="Protobuf 存储"></a>Protobuf 存储</h2><p><code>Protobuf</code> 使用 <code>T-L-V</code> 的编码格式进行存储，即 <code>Tag-Length-Value</code> （其中 <code>Length</code> 是可选参数）。</p>
-<p><code>TLV</code> 编码由于有 Length 属性的存在，所以其有一个显著的优势，<strong>可以直接在二进制序列中进行边界分割</strong>，所以，这种方式组织的数据并不需要额外的分隔符来划分数据，所以序列化的效率非常高（空间效率）</p>
-<p><code>Protobuf</code> 的每个字段 <code>field</code> 都使用 <code>TLV</code> 进行序列化，即每个 <code>field</code> 对应一个 <code>TLV</code>。然后 Protobuf 会将所有的 field 进行拼接，得到最终的</p>
-<p>因此，对于一个 <code>Protobuf Message</code> 就可以看成是多个字段的 <code>TLV</code> 序列拼接成的一个二进制字节流。</p>
+<p>注：<code>Start Group</code> 和 <code>End Group</code> 已经被弃用，所以后续的序列化会跳过这两个类型</p>
+<h2 id="Protobuf-存储-1"><a href="#Protobuf-存储-1" class="headerlink" title="Protobuf 存储"></a>Protobuf 存储</h2><h3 id="1-TLV-格式"><a href="#1-TLV-格式" class="headerlink" title="1. TLV 格式"></a>1. TLV 格式</h3><p><code>Protobuf</code> 使用 <code>T-L-V</code> 的编码格式进行存储，即 <code>Tag-Length-Value</code> （其中 <code>Length</code> 是可选参数）</p>
+<p><code>Protobuf</code> 的每个字段 <code>field</code> 都使用 <code>TLV</code> 进行序列化，即每个 <code>field</code> 对应一个 <code>TLV</code>。然后 <code>Protobuf</code> 会将所有的 <code>field</code> 进行拼接，得到最终的序列。</p>
+<p>因此， <code>Message</code>由一个个字段 <code>field</code> 组成， 每个字段由 TLV 进行组成，所以一个 <code>Message</code> 就可以看成是多个字段的 <code>TLV</code> 序列拼接成的一个二进制字节流。</p>
 <p><img src="/2024/05/22/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E4%B8%89%EF%BC%89%EF%BC%9A%E5%BA%8F%E5%88%97%E5%8C%96%E5%BA%95%E5%B1%82%E5%8E%9F%E7%90%86/TLV%E6%8B%BC%E6%8E%A5.png"> </p>
 <p><code>T-L-V</code> 存储方式的 <strong>优点</strong> 在于</p>
 <ol>
-<li>不需要分隔符就能分隔字段，节省了分隔符空间，数据紧凑，存储空间利用率高</li>
+<li>由于有 <code>Length</code> 属性的存在，因此 <code>TLV</code> <strong>不需要分隔符就能分隔字段</strong>，节省了分隔符的空间，所以序列化的空闲效率非常高</li>
 <li>如果某个字段没有被设置字段值，那么该字段在序列化时的数据中是完全不存在的，即不需要编码，相应字段在解码时才会被设置为默认值。</li>
 </ol>
 <blockquote>
-<p>对于 <code>Varint</code> &amp; <code>Zigzag</code> 编码，省略了<code>T - L - V</code>中的字节长度<code>Length</code></p>
+<p>对于 <code>Varint</code> &amp; <code>Zigzag</code> 编码，由于编码自身可以进行边界分割，所以省略了<code>T-L-V</code>中的字节长度 <code>Length</code>，进一步的提高了序列化效率</p>
 </blockquote>
-<h3 id="Tag"><a href="#Tag" class="headerlink" title="Tag"></a>Tag</h3><p><code>Tag</code> 在作用是标识字段，其中存储了字段的 <strong>标识号（field_number）</strong> 和 <strong>数据类型（wire_type）</strong>，使用 <code>varints</code> 编码方式进行编码</p>
+<h3 id="2-Tag-字段计算"><a href="#2-Tag-字段计算" class="headerlink" title="2. Tag 字段计算"></a>2. Tag 字段计算</h3><p><code>Tag</code> 在作用是标识字段，其中存储了字段的 <strong>标识号（field_number）</strong> 和 <strong>数据类型（wire_type）</strong>，使用 <code>varints</code> 编码方式进行编码</p>
 <p>其计算方法是 <code>field_num &lt;&lt; 3 | wire_type</code> (也称为每个<code>filed</code>的<code>key</code>或者键)。因此 低3位永远用来表示 <code>wire_type</code></p>
 <p>那么我们现在来计算一个完整的序列化后的字段的 Tag</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">08</span> <span class="number">96</span> <span class="number">01</span>  <span class="comment">// 原始值</span></span><br><span class="line"><span class="number">00001000</span> <span class="number">10010110</span> <span class="number">00000001</span>  <span class="comment">// 转换成二进制</span></span><br></pre></td></tr></table></figure>
 
 <p>由于第一个字符一定是 <code>varints</code> 编码的 <code>Tag</code>，而 <code>Tag</code> 的 <code>msb</code> 位是 0。所以 <code>Tag</code> 只占用一个字节</p>
 <p>且 <code>Tag = 000 1000</code>，那么我们可以根据 后三位得到 <code>wire_type = 0</code>，然后将 <code>Tag</code> 右移3位得到 <code>0001</code>，即 <code>field_num = 1</code></p>
-<h3 id="2-Length"><a href="#2-Length" class="headerlink" title="2. Length"></a>2. Length</h3><h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>回顾一下，<code>Protobuf</code> 的编码分为字段和消息两部分，每个字段包括：</p>
+<h3 id="3-Length-字段"><a href="#3-Length-字段" class="headerlink" title="3. Length 字段"></a>3. Length 字段</h3><p><code>Length</code> 标识 <code>Value</code> 的长度，和 <code>Tag</code> 一样，也使用 <code>varints</code> 编码方式进行编码</p>
+<p><code>TLV</code> 中的 <code>length</code> 是一个可选参数，<code>length</code> 是否需要主要根据 <code>wire_type</code> 来决定。</p>
+<p>具体存储结构如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th><strong>wire_type</strong></th>
+<th><strong>含义</strong></th>
+<th><strong>二进制存储结构</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>0</td>
+<td>Varint</td>
+<td>Tag-Value</td>
+</tr>
+<tr>
+<td>1</td>
+<td>64-bit</td>
+<td>Tag-Value</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Length-delimited</td>
+<td>Tag-Length-Value</td>
+</tr>
+<tr>
+<td>5</td>
+<td>32-bit</td>
+<td>Tag-Value</td>
+</tr>
+</tbody></table>
+<h3 id="4-value-字段"><a href="#4-value-字段" class="headerlink" title="4. value 字段"></a>4. value 字段</h3><p><code>value</code> 字段可以直接根据 <code>value</code> 的类型对应的编码获得</p>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>回顾一下，<code>Protobuf</code> 的编码分为字段和消息两部分，每个字段包括：</p>
 <ol>
 <li><strong>Field Number（字段号）</strong>：标识字段的唯一标识符。</li>
 <li><strong>Wire Type（传输类型）</strong>：描述字段值的编码类型。</li>
 <li><strong>Field Value（字段值）</strong>：字段的实际值。</li>
 </ol>
-<h4 id="编码示例"><a href="#编码示例" class="headerlink" title="编码示例"></a>编码示例</h4><p>以下是一个简单的 Protobuf 消息定义示例：</p>
-<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">syntax = <span class="string">&quot;proto3&quot;</span>;</span><br><span class="line"></span><br><span class="line">message Person &#123;</span><br><span class="line">    int32 id = <span class="number">1</span>;</span><br><span class="line">    string name = <span class="number">2</span>;</span><br><span class="line">    <span class="type">bool</span> is_student = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="编码示例"><a href="#编码示例" class="headerlink" title="编码示例"></a>编码示例</h4><p>以下是一个简单的 <code>Protobuf</code> 消息定义示例：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">message Person &#123;</span><br><span class="line">    int32 id = <span class="number">1</span>;</span><br><span class="line">    string name = <span class="number">2</span>;</span><br><span class="line">    <span class="type">bool</span> is_student = <span class="number">3</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>假设消息的值如下</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">id = <span class="number">123</span></span><br><span class="line">name = <span class="string">&quot;Alice&quot;</span></span><br><span class="line">is_student = <span class="literal">true</span></span><br></pre></td></tr></table></figure>
@@ -332,70 +415,37 @@
 <ul>
 <li><code>Field Number</code>: 1</li>
 <li><code>Wire Type</code>: 0（Varint，用于整数）</li>
-<li><code>Field Value</code>: 123（假设 id 的值为 123）<br>计算可得 <code>tag = (1 &lt;&lt; 3) | 0 = 8</code></li>
+<li><code>Field Value</code>: 123（假设 id 的值为 123）<br>计算可得</li>
+<li><code>Tag</code>：<code>(1 &lt;&lt; 3) | 0 = 8</code>，即 <code>Varint</code> 编码为 <code>0x08</code></li>
+<li><code>Value</code>： <code>7b</code>（123 的 Varint 编码）</li>
 </ul>
-<p>int 字段使用</p>
+<p><code>name</code> 相关信息</p>
 <ul>
-<li>tag : <code>08</code>（十六进制）</li>
-<li>field_value: <code>7b</code>（123 的 Varint 编码）</li>
-</ul>
-<ol>
-<li><strong>字段 2（name）</strong>：<ul>
 <li><code>Field Number</code>: 2</li>
 <li><code>Wire Type</code>: 2（Length-delimited，用于字符串）</li>
-<li><code>Field Value</code>: “Alice”（假设 name 的值为 “Alice”）、<br>name 字段的 key 是 <code>(2 &lt;&lt; 3) | 2 = 18</code></li>
+<li><code>Field Value</code>: “Alice”（假设 name 的值为 “Alice”）、<br>计算可得</li>
+<li><code>Tag</code> ： <code>(2 &lt;&lt; 3) | 2 = 18</code>，<code>Varint</code> 编码为 <code>0x12</code></li>
+<li><code>Length</code>：<code>0x05</code>（字符串长度为5）</li>
+<li><code>Value</code>: <code>Alice</code> 的 ASCII 编码为 <code>0x41 0x6C 0x69 0x63 0x65</code></li>
 </ul>
-</li>
-</ol>
+<p><code>is_student</code> 相关信息</p>
 <ul>
-<li><code>key = (2 &lt;&lt; 3) | 2 = 18</code>（Varint 编码）</li>
-<li><code>field_length = 5</code>（”Alice” 的长度，Varint 编码）</li>
-<li><code>field_value = &quot;Alice&quot;</code>（ASCII 编码）</li>
+<li><code>Field Number</code>: 3</li>
+<li><code>Wire Type</code>: 0（Varint，用于布尔值）</li>
+<li><code>Field Value</code>: true（假设 is_student 的值为 true）<br> 计算可得</li>
+<li><code>Tag</code>：<code>(3 &lt;&lt; 3) | 0 = 24</code>，<code>Varint</code> 编码为 <code>0x18</code></li>
+<li><code>Value</code>：<code>0x01</code></li>
 </ul>
-<ol>
-<li><strong>字段 3（is_student）</strong>：<ul>
-<li>Field Number: 3</li>
-<li>Wire Type: 0（Varint，用于布尔值）</li>
-<li>Field Value: true（假设 is_student 的值为 true）<br>is_student 字段的 key 是 <code>(3 &lt;&lt; 3) | 0 = 24</code></li>
-</ul>
-</li>
-</ol>
-<p>Protobuf 的编码将这些字段的 Field Number 和 Wire Type 组合成一个称为 “key” 的值，然后编码实际的 Field Value。例如：</p>
-<ol start="2">
-<li><p><strong>字段 2（name）</strong>：</p>
+<p>将所有字段的<code>TLV</code>编码结果拼接在一起，得到最终的序列化输出：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">08 7b 12 05 41 6c 69 63 65 18 01</span><br></pre></td></tr></table></figure>
+
+
+
+<p>参考文章</p>
 <ul>
-<li>Field Number: 2</li>
-<li>Wire Type: 2（Length-delimited，用于字符串）</li>
-<li>Field Value: “Alice”</li>
+<li><a target="_blank" rel="noopener" href="https://protobuf.dev/programming-guides/encoding/">https://protobuf.dev/programming-guides/encoding/</a></li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/carson_ho/article/details/70568606">https://blog.csdn.net/carson_ho/article/details/70568606</a></li>
 </ul>
-<p> 编码过程：</p>
-<p> 编码结果：</p>
-<ul>
-<li>key: <code>12</code>（十六进制）</li>
-<li>field_length: <code>05</code>（”Alice” 的长度 5，Varint 编码）</li>
-<li>field_value: <code>41 6c 69 63 65</code>（”Alice” 的 ASCII 编码）</li>
-</ul>
-</li>
-<li><p><strong>字段 3（is_student）</strong>：</p>
-<ul>
-<li>Field Number: 3</li>
-<li>Wire Type: 0（Varint，用于布尔值）</li>
-<li>Field Value: true</li>
-</ul>
-<p> 编码过程：</p>
-<ul>
-<li><code>key = (3 &lt;&lt; 3) | 0 = 24</code>（Varint 编码）</li>
-<li><code>field_value = 1</code>（true 的 Varint 编码）</li>
-</ul>
-<p> 编码结果：</p>
-<ul>
-<li>key: <code>18</code>（十六进制）</li>
-<li>field_value: <code>01</code>（true 的 Varint 编码）</li>
-</ul>
-</li>
-</ol>
-<h3 id="最终序列化结果"><a href="#最终序列化结果" class="headerlink" title="最终序列化结果"></a>最终序列化结果</h3><p>将所有字段的编码结果拼接在一起，得到最终的序列化输出：</p>
-<p><code>08 7b 12 05 41 6c 69 63 65 18 01</code></p>
 
   </div>
 </article>
@@ -423,7 +473,7 @@
     
     
       <div id="toc-footer" style="display: none">
-        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%BA%8F%E5%88%97%E5%8C%96%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 序列化原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%BC%96%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">1. 编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">2.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">2.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">2.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">2.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8"><span class="toc-number">3.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">3.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">3.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-field"><span class="toc-number">3.3.</span> <span class="toc-text">3.field</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8-1"><span class="toc-number">4.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Tag"><span class="toc-number">4.1.</span> <span class="toc-text">Tag</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Length"><span class="toc-number">4.2.</span> <span class="toc-text">2. Length</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90"><span class="toc-number">5.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-number">5.0.1.</span> <span class="toc-text">编码示例</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%80%E7%BB%88%E5%BA%8F%E5%88%97%E5%8C%96%E7%BB%93%E6%9E%9C"><span class="toc-number">5.1.</span> <span class="toc-text">最终序列化结果</span></a></li></ol></li></ol>
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%BA%8F%E5%88%97%E5%8C%96%E5%8E%9F%E7%90%86"><span class="toc-number">1.</span> <span class="toc-text">Protobuf 序列化原理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#1-%E7%BC%96%E7%A0%81"><span class="toc-number">2.</span> <span class="toc-text">1. 编码</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-Varints"><span class="toc-number">2.1.</span> <span class="toc-text">1.Varints</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E5%8F%98%E9%95%BF%E7%BC%96%E7%A0%81"><span class="toc-number">2.1.1.</span> <span class="toc-text">varints 变长编码</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#varints-%E4%BE%8B%E5%AD%90"><span class="toc-number">2.1.2.</span> <span class="toc-text">varints 例子</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Zigzag-%E7%BC%96%E7%A0%81"><span class="toc-number">2.2.</span> <span class="toc-text">2. Zigzag 编码</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%9B%BA%E5%AE%9A%E9%95%BF%E5%BA%A6%E7%BC%96%E7%A0%81-32-64-bit"><span class="toc-number">2.3.</span> <span class="toc-text">3. 固定长度编码 32&#x2F;64-bit</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-string-%E7%BC%96%E7%A0%81"><span class="toc-number">2.4.</span> <span class="toc-text">4. string 编码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8"><span class="toc-number">3.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%97%E6%AE%B5%E7%BC%96%E5%8F%B7-field-num"><span class="toc-number">3.1.</span> <span class="toc-text">1.字段编号(field_num)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E4%BC%A0%E8%BE%93%E7%B1%BB%E5%9E%8B-wire-type"><span class="toc-number">3.2.</span> <span class="toc-text">2.传输类型(wire_type)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Protobuf-%E5%AD%98%E5%82%A8-1"><span class="toc-number">4.</span> <span class="toc-text">Protobuf 存储</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-TLV-%E6%A0%BC%E5%BC%8F"><span class="toc-number">4.1.</span> <span class="toc-text">1. TLV 格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Tag-%E5%AD%97%E6%AE%B5%E8%AE%A1%E7%AE%97"><span class="toc-number">4.2.</span> <span class="toc-text">2. Tag 字段计算</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Length-%E5%AD%97%E6%AE%B5"><span class="toc-number">4.3.</span> <span class="toc-text">3. Length 字段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-value-%E5%AD%97%E6%AE%B5"><span class="toc-number">4.4.</span> <span class="toc-text">4. value 字段</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90"><span class="toc-number">5.</span> <span class="toc-text">例子</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BC%96%E7%A0%81%E7%A4%BA%E4%BE%8B"><span class="toc-number">5.0.1.</span> <span class="toc-text">编码示例</span></a></li></ol></li></ol></li></ol>
       </div>
     
 
