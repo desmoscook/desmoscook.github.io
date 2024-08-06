@@ -8,13 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="description" content="LSP在使用vim进行大型项目的开发时，由于没有IDE提供的自动补全，因此需要配置LSP。 LSP是Language Server Protocol的缩写，即语言服务器协议。它的主要目的是提供统一的服务器，使不同编辑器能够与统一的语言服务器进行通信，从而提供代码补全、语法检查、跳转到定义、查找引用等功能。 LSP 的设计使得编辑器和 IDE 可以更轻松地支持多种编程语言，而无需为每种语言单独实现这">
 <meta property="og:type" content="article">
-<meta property="og:title" content="bazel项目生成compile_commands.json文件以使用clang补全">
+<meta property="og:title" content="Bazel项目生成compile_commands.json文件以使用clang补全">
 <meta property="og:url" content="http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/index.html">
 <meta property="og:site_name" content="desmoscook">
 <meta property="og:description" content="LSP在使用vim进行大型项目的开发时，由于没有IDE提供的自动补全，因此需要配置LSP。 LSP是Language Server Protocol的缩写，即语言服务器协议。它的主要目的是提供统一的服务器，使不同编辑器能够与统一的语言服务器进行通信，从而提供代码补全、语法检查、跳转到定义、查找引用等功能。 LSP 的设计使得编辑器和 IDE 可以更轻松地支持多种编程语言，而无需为每种语言单独实现这">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-06-30T07:40:00.000Z">
-<meta property="article:modified_time" content="2024-07-29T18:51:09.915Z">
+<meta property="article:modified_time" content="2024-08-05T05:47:19.653Z">
 <meta property="article:author" content="desmoscook">
 <meta property="article:tag" content="C++">
 <meta name="twitter:card" content="summary">
@@ -37,7 +37,7 @@
       
     
     <!-- title -->
-    <title>bazel项目生成compile_commands.json文件以使用clang补全</title>
+    <title>Bazel项目生成compile_commands.json文件以使用clang补全</title>
     <!-- async scripts -->
     <!-- Google Analytics -->
 
@@ -99,16 +99,16 @@
     <div id="share" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&text=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&is_video=false&description=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=bazel项目生成compile_commands.json文件以使用clang补全&body=Check out this article: http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&name=bazel项目生成compile_commands.json文件以使用clang补全&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&t=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&text=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&is_video=false&description=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Bazel项目生成compile_commands.json文件以使用clang补全&body=Check out this article: http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&name=Bazel项目生成compile_commands.json文件以使用clang补全&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&t=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -128,7 +128,7 @@
   <header>
     
     <h1 class="posttitle p-name" itemprop="name headline">
-        bazel项目生成compile_commands.json文件以使用clang补全
+        Bazel项目生成compile_commands.json文件以使用clang补全
     </h1>
 
 
@@ -225,16 +225,16 @@
     <div id="share-footer" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&text=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&is_video=false&description=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=bazel项目生成compile_commands.json文件以使用clang补全&body=Check out this article: http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&name=bazel项目生成compile_commands.json文件以使用clang补全&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&t=bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&text=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&is_video=false&description=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=Bazel项目生成compile_commands.json文件以使用clang补全&body=Check out this article: http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&title=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&name=Bazel项目生成compile_commands.json文件以使用clang补全&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/&t=Bazel项目生成compile_commands.json文件以使用clang补全"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>

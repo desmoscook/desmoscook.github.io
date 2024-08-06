@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="gflags 是什么？gflags 是一个由 Google 开发的命令行解析库。 gflags 主要用于解析命令行标志（flags），其极大的简化了从命令行读取参数并将其转换为变量的过程。 代码仓库：https:&#x2F;&#x2F;github.com&#x2F;gflags&#x2F;gflags 安装对于 C++ 项目，可以使用 cmake 或者从源码编译安装。 使用 CMake： 123456git clone https:&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="gflags使用">
+<meta property="og:url" content="http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="desmoscook">
+<meta property="og:description" content="gflags 是什么？gflags 是一个由 Google 开发的命令行解析库。 gflags 主要用于解析命令行标志（flags），其极大的简化了从命令行读取参数并将其转换为变量的过程。 代码仓库：https:&#x2F;&#x2F;github.com&#x2F;gflags&#x2F;gflags 安装对于 C++ 项目，可以使用 cmake 或者从源码编译安装。 使用 CMake： 123456git clone https:&#x2F;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-02-05T14:33:02.000Z">
+<meta property="article:modified_time" content="2024-08-06T15:26:05.751Z">
+<meta property="article:author" content="desmoscook">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>gflags使用</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2024/03/20/%E5%BF%AB%E9%80%9F%E9%80%89%E6%8B%A9%E4%B8%BA%E4%BB%80%E4%B9%88%E6%98%AFO(n)%E7%9A%84%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%EF%BC%9F/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/01/23/%E8%99%9A%E5%87%BD%E6%95%B0%E8%A1%A8%EF%BC%8C%E9%80%9A%E8%BF%87%E4%BF%AE%E6%94%B9%E8%99%9A%E8%A1%A8%E5%9C%B0%E5%9D%80%E7%90%86%E8%A7%A3/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&text=gflags使用"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&is_video=false&description=gflags使用"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gflags使用&body=Check out this article: http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&name=gflags使用&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&t=gflags使用"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#gflags-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">gflags 是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85"><span class="toc-number">2.</span> <span class="toc-text">安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="toc-number">3.</span> <span class="toc-text">基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8C%85%E5%90%AB%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">1.包含头文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%9A%E4%B9%89%E6%A0%87%E5%BF%97"><span class="toc-number">3.2.</span> <span class="toc-text">2.定义标志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%88%9D%E5%A7%8B%E5%8C%96gflags"><span class="toc-number">3.3.</span> <span class="toc-text">3.初始化gflags</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BD%BF%E7%94%A8%E8%A2%AB%E8%A7%A3%E6%9E%90%E7%9A%84-flag"><span class="toc-number">3.4.</span> <span class="toc-text">4. 使用被解析的 flag</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">4.</span> <span class="toc-text">基本使用示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%B9%89%E6%A0%87%E5%BF%97%E9%AA%8C%E8%AF%81%E5%87%BD%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">定义标志验证函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0"><span class="toc-number">6.</span> <span class="toc-text">从文件解析命令行参数</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        gflags使用
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">desmoscook</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-02-05T14:33:02.000Z" class="dt-published" itemprop="datePublished">2024-02-05</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <h2 id="gflags-是什么？"><a href="#gflags-是什么？" class="headerlink" title="gflags 是什么？"></a>gflags 是什么？</h2><p><code>gflags</code> 是一个由 <code>Google</code> 开发的命令行解析库。</p>
+<p><code>gflags</code> 主要用于解析命令行标志（flags），其极大的简化了从命令行读取参数并将其转换为变量的过程。</p>
+<p>代码仓库：<a target="_blank" rel="noopener" href="https://github.com/gflags/gflags">https://github.com/gflags/gflags</a></p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><p>对于 <code>C++</code> 项目，可以使用 <code>cmake</code> 或者从源码编译安装。</p>
+<p><strong>使用 CMake：</strong></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">git <span class="built_in">clone</span> https://github.com/gflags/gflags.git</span><br><span class="line"><span class="built_in">cd</span> gflags</span><br><span class="line"><span class="built_in">mkdir</span> build &amp;&amp; <span class="built_in">cd</span> build</span><br><span class="line">cmake ..</span><br><span class="line">make</span><br><span class="line">sudo make install</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h2><h3 id="1-包含头文件"><a href="#1-包含头文件" class="headerlink" title="1.包含头文件"></a>1.包含头文件</h3><p>首先，要使用 <code>gflags</code>，需要包含 <code>gflags</code> 的头文件，如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;gflags/gflags.h&gt;</span></span></span><br></pre></td></tr></table></figure>
+
+
+<h3 id="2-定义标志"><a href="#2-定义标志" class="headerlink" title="2.定义标志"></a>2.定义标志</h3><p>标志 <code>flags</code> 是用于从命令行传递参数的变量，每个标志都有一个名称，类型，默认值和描述。</p>
+<p><code>gflags</code> 提供了诸多宏用于定义标志，如下表：</p>
+<table>
+<thead>
+<tr>
+<th><code>gflags</code> 定义类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>DEFINE_string</code></td>
+<td>string 类型</td>
+</tr>
+<tr>
+<td><code>DEFINE_bool</code></td>
+<td>布尔类型</td>
+</tr>
+<tr>
+<td><code>DEFINE_int32</code></td>
+<td>32 位整数</td>
+</tr>
+<tr>
+<td><code>DEFINE_int64</code></td>
+<td>64 位整数</td>
+</tr>
+<tr>
+<td><code>DEFINE_uint64</code></td>
+<td>无符号 64 位整数</td>
+</tr>
+<tr>
+<td><code>EFINE_double</code></td>
+<td>浮点类型 double</td>
+</tr>
+<tr>
+<td><code>DEFINE_string</code></td>
+<td>C++ string 类型</td>
+</tr>
+</tbody></table>
+<p>宏的使用如下</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">DEFINE_XXX</span>(name, value, desc)</span><br><span class="line"></span><br><span class="line">name  -- 名称</span><br><span class="line">value -- 默认值</span><br><span class="line">desc  -- 描述，即提示信息</span><br></pre></td></tr></table></figure>
+
+
+<h3 id="3-初始化gflags"><a href="#3-初始化gflags" class="headerlink" title="3.初始化gflags"></a>3.初始化gflags</h3><p>在使用 gflags 之前，需要初始化 gflags 并进行命令行解析，需要在 mian 函数中加入如下函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    gflags::<span class="built_in">ParseCommandLineFlags</span>(&amp;argc, &amp;argv, <span class="literal">true</span>);</span><br><span class="line">	</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-使用被解析的-flag"><a href="#4-使用被解析的-flag" class="headerlink" title="4. 使用被解析的 flag"></a>4. 使用被解析的 flag</h3><p>对于宏定义后的 <code>flag</code>，其都会生成一个变量，命名为 <code>FLAGS_NAME</code></p>
+<p>如，定义了一个 <code>name</code> 为 <code>str</code> 的 <code>flag</code>，那么 <code>gflags</code> 会自动定义一个 <code>FLAGS_str</code> 的变量用于接收这个 <code>flag</code> 的参数</p>
+<h2 id="基本使用示例"><a href="#基本使用示例" class="headerlink" title="基本使用示例"></a>基本使用示例</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;gflags/gflags.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 定义标志</span></span><br><span class="line"><span class="built_in">DEFINE_bool</span>(verbose, <span class="literal">false</span>, <span class="string">&quot;Enable verbose logging&quot;</span>);</span><br><span class="line"><span class="built_in">DEFINE_int32</span>(port, <span class="number">8080</span>, <span class="string">&quot;Port number&quot;</span>);</span><br><span class="line"><span class="built_in">DEFINE_string</span>(host, <span class="string">&quot;localhost&quot;</span>, <span class="string">&quot;Hostname&quot;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">(<span class="type">int</span> argc, <span class="type">char</span>* argv[])</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 初始化并解析命令行标志</span></span><br><span class="line">    gflags::<span class="built_in">ParseCommandLineFlags</span>(&amp;argc, &amp;argv, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 使用标志</span></span><br><span class="line">    <span class="keyword">if</span> (FLAGS_verbose) &#123;</span><br><span class="line">        std::cout &lt;&lt; <span class="string">&quot;Verbose logging enabled&quot;</span> &lt;&lt; std::endl;</span><br><span class="line">    &#125;</span><br><span class="line">    std::cout &lt;&lt; <span class="string">&quot;Connecting to &quot;</span> &lt;&lt; FLAGS_host &lt;&lt; <span class="string">&quot; on port &quot;</span> &lt;&lt; FLAGS_port &lt;&lt; std::endl;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>编译</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 注意链接 gfalgs 库</span></span><br><span class="line">g++ test.cc -o <span class="built_in">test</span> -lgflags</span><br><span class="line"></span><br><span class="line"><span class="comment"># 通过命令行传递参数</span></span><br><span class="line"><span class="comment"># 如果没有传递，则使用默认值，即 FLAGS_verbose = fasle，FLAGS_prot = 8080 等</span></span><br><span class="line">./test --verbose --port=9090 --host=example.com</span><br><span class="line"></span><br><span class="line"><span class="comment"># 查看所有定义的标志和说明</span></span><br><span class="line">./test --<span class="built_in">help</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="定义标志验证函数"><a href="#定义标志验证函数" class="headerlink" title="定义标志验证函数"></a>定义标志验证函数</h2><p><code>gflags</code> 还提供了 <strong>标志验证</strong> 的功能，用于在命令行参数解析后对标志的值进行验证，以确保其符合特定条件。</p>
+<p>如果标志的值不符合要求，即标志验证函数返回 false，则会打印错误信息，并终止程序执行。</p>
+<p>标志验证函数需要符合如下函数签名，其中 <code>type</code> 是要验证的 <code>flag</code> 的类型，如果要验证的 <code>flag</code> 类型为 <code>int32</code> 则 <code>type</code> 即为 <code>int32</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="type">bool</span> <span class="title">ValidateFunctionName</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* flagname, type value)</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">DEFINE_int32</span>(port, <span class="number">8080</span>, <span class="string">&quot;Port number&quot;</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 标志验证函数</span></span><br><span class="line"><span class="function"><span class="type">static</span> <span class="type">bool</span> <span class="title">ValidatePort</span><span class="params">(<span class="type">const</span> <span class="type">char</span>* flagname, <span class="type">int32_t</span> value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (value &gt; <span class="number">0</span> &amp;&amp; value &lt; <span class="number">65536</span>)  <span class="comment">// 合法端口范围</span></span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">&quot;Invalid value for --%s: %d\n&quot;</span>, flagname, value);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 注册标志验证函数</span></span><br><span class="line"><span class="type">static</span> <span class="type">const</span> <span class="type">bool</span> port_dummy = gflags::<span class="built_in">RegisterFlagValidator</span>(&amp;FLAGS_port, &amp;ValidatePort);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="type">int</span> <span class="title">main</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<h2 id="从文件解析命令行参数"><a href="#从文件解析命令行参数" class="headerlink" title="从文件解析命令行参数"></a>从文件解析命令行参数</h2><p><code>gflags</code> 支持从文件中读取标志值，通过 <code>--flagfile=&lt;filename&gt;</code> 可以指定包含标志定义的文件。</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># flags.txt</span><br><span class="line">--verbose</span><br><span class="line">--port=9090</span><br><span class="line">--host=example.com</span><br></pre></td></tr></table></figure>
+
+<p>使用下面命令可以和直接传递达到相同的效果</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./test --flagfile=flags.txt</span><br></pre></td></tr></table></figure>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#gflags-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">gflags 是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E8%A3%85"><span class="toc-number">2.</span> <span class="toc-text">安装</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8"><span class="toc-number">3.</span> <span class="toc-text">基本使用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%8C%85%E5%90%AB%E5%A4%B4%E6%96%87%E4%BB%B6"><span class="toc-number">3.1.</span> <span class="toc-text">1.包含头文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E5%AE%9A%E4%B9%89%E6%A0%87%E5%BF%97"><span class="toc-number">3.2.</span> <span class="toc-text">2.定义标志</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%88%9D%E5%A7%8B%E5%8C%96gflags"><span class="toc-number">3.3.</span> <span class="toc-text">3.初始化gflags</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E4%BD%BF%E7%94%A8%E8%A2%AB%E8%A7%A3%E6%9E%90%E7%9A%84-flag"><span class="toc-number">3.4.</span> <span class="toc-text">4. 使用被解析的 flag</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8%E7%A4%BA%E4%BE%8B"><span class="toc-number">4.</span> <span class="toc-text">基本使用示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9A%E4%B9%89%E6%A0%87%E5%BF%97%E9%AA%8C%E8%AF%81%E5%87%BD%E6%95%B0"><span class="toc-number">5.</span> <span class="toc-text">定义标志验证函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%8F%82%E6%95%B0"><span class="toc-number">6.</span> <span class="toc-text">从文件解析命令行参数</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&text=gflags使用"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&is_video=false&description=gflags使用"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=gflags使用&body=Check out this article: http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&title=gflags使用"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&name=gflags使用&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/02/05/gflags%E4%BD%BF%E7%94%A8/&t=gflags使用"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    desmoscook
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
