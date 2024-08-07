@@ -8,13 +8,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
     <meta name="description" content="SSH 密钥是一种用于认证的公钥加密方法，常用于安全地连接到远程服务器。使用 github 的小伙伴一定非常熟悉这个名词，因此 github 最常用的认证方式就是 SSH 这里记录一下配置 SSH 密钥的详细步骤，包括生成密钥对、将公钥添加到远程服务器、测试连接等。 密钥对生成和添加1. 生成 SSH 密钥对下面命令生成密钥，默认保存在 ~&#x2F;.ssh&#x2F;id_rsa。对于每个密钥，会有一个私钥和一个">
 <meta property="og:type" content="article">
-<meta property="og:title" content="配置ssh-key">
+<meta property="og:title" content="github配置ssh-key">
 <meta property="og:url" content="http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/index.html">
 <meta property="og:site_name" content="desmoscook">
 <meta property="og:description" content="SSH 密钥是一种用于认证的公钥加密方法，常用于安全地连接到远程服务器。使用 github 的小伙伴一定非常熟悉这个名词，因此 github 最常用的认证方式就是 SSH 这里记录一下配置 SSH 密钥的详细步骤，包括生成密钥对、将公钥添加到远程服务器、测试连接等。 密钥对生成和添加1. 生成 SSH 密钥对下面命令生成密钥，默认保存在 ~&#x2F;.ssh&#x2F;id_rsa。对于每个密钥，会有一个私钥和一个">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2024-01-15T03:50:44.000Z">
-<meta property="article:modified_time" content="2024-08-07T04:05:47.017Z">
+<meta property="article:modified_time" content="2024-08-07T04:14:15.697Z">
 <meta property="article:author" content="desmoscook">
 <meta name="twitter:card" content="summary">
     
@@ -36,7 +36,7 @@
       
     
     <!-- title -->
-    <title>配置ssh-key</title>
+    <title>github配置ssh-key</title>
     <!-- async scripts -->
     <!-- Google Analytics -->
 
@@ -98,16 +98,16 @@
     <div id="share" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&text=配置ssh-key"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&is_video=false&description=配置ssh-key"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=配置ssh-key&body=Check out this article: http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&name=配置ssh-key&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&t=配置ssh-key"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&text=github配置ssh-key"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&is_video=false&description=github配置ssh-key"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=github配置ssh-key&body=Check out this article: http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&name=github配置ssh-key&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&t=github配置ssh-key"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
@@ -127,7 +127,7 @@
   <header>
     
     <h1 class="posttitle p-name" itemprop="name headline">
-        配置ssh-key
+        github配置ssh-key
     </h1>
 
 
@@ -215,16 +215,16 @@
     <div id="share-footer" style="display: none">
       <ul>
   <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&text=配置ssh-key"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&is_video=false&description=配置ssh-key"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" href="mailto:?subject=配置ssh-key&body=Check out this article: http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=配置ssh-key"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&name=配置ssh-key&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
-  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&t=配置ssh-key"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&text=github配置ssh-key"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&is_video=false&description=github配置ssh-key"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=github配置ssh-key&body=Check out this article: http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&title=github配置ssh-key"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&name=github配置ssh-key&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/01/15/%E9%85%8D%E7%BD%AEssh-key/&t=github配置ssh-key"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
 </ul>
 
     </div>
