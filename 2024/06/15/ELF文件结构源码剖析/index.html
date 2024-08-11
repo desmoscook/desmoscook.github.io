@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="ELF(Executable and Linkable Format) 文件是 UNIX 系统中常见的可执行文件格式，用于描述可执行文件、目标代码、共享库和核心转储文件的结构。ELF文件具有灵活和可扩展的优点，广泛应用于Linux、BSD和其他类UNIX系统。下面是ELF文件结构的详细介绍： 1. ELF 分类ELF 文件一般分为 4 种  可执行文件（Executable File）：一般没有后">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ELF文件结构源码剖析">
+<meta property="og:url" content="http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/index.html">
+<meta property="og:site_name" content="desmoscook">
+<meta property="og:description" content="ELF(Executable and Linkable Format) 文件是 UNIX 系统中常见的可执行文件格式，用于描述可执行文件、目标代码、共享库和核心转储文件的结构。ELF文件具有灵活和可扩展的优点，广泛应用于Linux、BSD和其他类UNIX系统。下面是ELF文件结构的详细介绍： 1. ELF 分类ELF 文件一般分为 4 种  可执行文件（Executable File）：一般没有后">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2024-06-15T09:34:08.000Z">
+<meta property="article:modified_time" content="2024-08-11T17:45:40.792Z">
+<meta property="article:author" content="desmoscook">
+<meta name="twitter:card" content="summary">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>ELF文件结构源码剖析</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        <li><a class="icon" aria-label="Previous post" href="/2024/06/30/bazel-%E4%BD%BF%E7%94%A8clangd%E8%BF%9B%E8%A1%8C%E8%A1%A5%E5%85%A8/"><i class="fa-solid fa-chevron-left" aria-hidden="true" onmouseover="$('#i-prev').toggle();" onmouseout="$('#i-prev').toggle();"></i></a></li>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/05/28/Protobuf%E5%8E%9F%E7%90%86%E5%92%8C%E4%BD%BF%E7%94%A8%EF%BC%88%E5%9B%9B%EF%BC%89%EF%BC%9A%E5%8F%8D%E5%B0%84/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&text=ELF文件结构源码剖析"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&is_video=false&description=ELF文件结构源码剖析"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ELF文件结构源码剖析&body=Check out this article: http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&name=ELF文件结构源码剖析&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&t=ELF文件结构源码剖析"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-ELF-%E5%88%86%E7%B1%BB"><span class="toc-number">1.</span> <span class="toc-text">1. ELF 分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-ELF-%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%8F%8F%E8%BF%B0"><span class="toc-number">2.</span> <span class="toc-text">2. ELF 文件结构描述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ELF-%E6%96%87%E4%BB%B6%E5%A4%B4"><span class="toc-number">2.1.</span> <span class="toc-text">1. ELF 文件头</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%AE%B5%E8%A1%A8%EF%BC%88Section-Header-Table%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">2. 段表（Section Header Table）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E8%8A%82%EF%BC%88Sections%EF%BC%89"><span class="toc-number">2.3.</span> <span class="toc-text">常见的节（Sections）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%A8%8B%E5%BA%8F%E5%A4%B4%E9%83%A8%E8%A1%A8"><span class="toc-number">2.4.</span> <span class="toc-text">3. 程序头部表</span></a></li></ol></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        ELF文件结构源码剖析
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">desmoscook</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-06-15T09:34:08.000Z" class="dt-published" itemprop="datePublished">2024-06-15</time>
+        
+      
+    </div>
+
+
+      
+
+      
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p><code>ELF(Executable and Linkable Format)</code> 文件是 <code>UNIX</code> 系统中常见的可执行文件格式，用于描述可执行文件、目标代码、共享库和核心转储文件的结构。ELF文件具有灵活和可扩展的优点，广泛应用于Linux、BSD和其他类UNIX系统。下面是ELF文件结构的详细介绍：</p>
+<h2 id="1-ELF-分类"><a href="#1-ELF-分类" class="headerlink" title="1. ELF 分类"></a>1. ELF 分类</h2><p>ELF 文件一般分为 4 种</p>
+<ul>
+<li><strong>可执行文件（Executable File）</strong>：一般没有后缀</li>
+<li><strong>可重定位文件（Relocatable File）</strong>：<code>.o</code>文件，二进制文件，但尚未和其他目标文件链接</li>
+<li><strong>共享库（共享目标文件）（Shared Object File）</strong>：<code>.so</code>文件</li>
+<li><strong>核心存储文件（Core Dump File）</strong>：程序意外终止时，系统会将该进程地址空间和终止等相关信息记录到 <code>Core Dump</code> 文件</li>
+</ul>
+<p>可以通过 <code>file</code> 命令来查看文件的格式</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">➜ file test.o</span><br><span class="line">test.o: ELF 64-bit LSB relocatable, x86-64, version 1 (SYSV), not stripped</span><br><span class="line"></span><br><span class="line">➜ file /bin/bash</span><br><span class="line">/bin/bash: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=2a9f157890930ced4c3ad0e74fc1b1b84aad71e6, <span class="keyword">for</span> GNU/Linux 3.2.0, stripped</span><br></pre></td></tr></table></figure>
+
+<p>可以看到</p>
+<ul>
+<li><code>test.o</code> 是 <code>relocatable</code> 类型</li>
+<li><code>/bin/bash</code> 是 <code>dynamically linked</code> 类型</li>
+</ul>
+<h2 id="2-ELF-文件结构描述"><a href="#2-ELF-文件结构描述" class="headerlink" title="2. ELF 文件结构描述"></a>2. ELF 文件结构描述</h2><h3 id="1-ELF-文件头"><a href="#1-ELF-文件头" class="headerlink" title="1. ELF 文件头"></a>1. ELF 文件头</h3><p>文件头的定义如下</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">unsigned</span> <span class="type">char</span> e_ident[<span class="number">16</span>];  <span class="comment">// 魔数和其他信息</span></span><br><span class="line">    <span class="type">uint16_t</span> e_type;            <span class="comment">// 文件类型</span></span><br><span class="line">    <span class="type">uint16_t</span> e_machine;         <span class="comment">// 目标体系结构</span></span><br><span class="line">    <span class="type">uint32_t</span> e_version;         <span class="comment">// 文件版本</span></span><br><span class="line">    <span class="type">uint64_t</span> e_entry;           <span class="comment">// 程序入口地址</span></span><br><span class="line">    <span class="type">uint64_t</span> e_phoff;           <span class="comment">// 程序头部表的文件偏移</span></span><br><span class="line">    <span class="type">uint64_t</span> e_shoff;           <span class="comment">// 节头部表的文件偏移</span></span><br><span class="line">    <span class="type">uint32_t</span> e_flags;           <span class="comment">// 处理器特定的标志</span></span><br><span class="line">    <span class="type">uint16_t</span> e_ehsize;          <span class="comment">// ELF头部的大小</span></span><br><span class="line">    <span class="type">uint16_t</span> e_phentsize;       <span class="comment">// 程序头部表中一个条目的大小</span></span><br><span class="line">    <span class="type">uint16_t</span> e_phnum;           <span class="comment">// 程序头部表中的条目数</span></span><br><span class="line">    <span class="type">uint16_t</span> e_shentsize;       <span class="comment">// 节头部表中一个条目的大小</span></span><br><span class="line">    <span class="type">uint16_t</span> e_shnum;           <span class="comment">// 节头部表中的条目数</span></span><br><span class="line">    <span class="type">uint16_t</span> e_shstrndx;        <span class="comment">// 节头部表中节名称字符串表的索引</span></span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+
+<p>可以使用 <code>readelf -h test.o</code> 可以查看 <code>ELF</code> 文件，可以看到，输出和结构体的定义基本对应</p>
+<ul>
+<li><code>3-8</code> 行：<code>e_ident</code> </li>
+<li><code>9</code> 行：<code>e_type</code></li>
+<li><code>10</code> 行：<code>e_machine</code></li>
+<li>等</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"># readelf -h test.o</span><br><span class="line">ELF Header:</span><br><span class="line">  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00</span><br><span class="line">  Class:                             ELF64</span><br><span class="line">  Data:                              2&#x27;s complement, little endian</span><br><span class="line">  Version:                           1 (current)</span><br><span class="line">  OS/ABI:                            UNIX - System V</span><br><span class="line">  ABI Version:                       0</span><br><span class="line">  Type:                              REL (Relocatable file)</span><br><span class="line">  Machine:                           Advanced Micro Devices X86-64</span><br><span class="line">  Version:                           0x1</span><br><span class="line">  Entry point address:               0x0</span><br><span class="line">  Start of program headers:          0 (bytes into file)</span><br><span class="line">  Start of section headers:          840 (bytes into file)</span><br><span class="line">  Flags:                             0x0</span><br><span class="line">  Size of this header:               64 (bytes)</span><br><span class="line">  Size of program headers:           0 (bytes)</span><br><span class="line">  Number of program headers:         0</span><br><span class="line">  Size of section headers:           64 (bytes)</span><br><span class="line">  Number of section headers:         14</span><br><span class="line">  Section header string table index: 13</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-段表（Section-Header-Table）"><a href="#2-段表（Section-Header-Table）" class="headerlink" title="2. 段表（Section Header Table）"></a>2. 段表（Section Header Table）</h3><p>节头部表描述了文件中的各个节。每个条目称为一个节头部（Section Header）。其结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">uint32_t</span> sh_name;      <span class="comment">// 节名称（字符串表索引）</span></span><br><span class="line">    <span class="type">uint32_t</span> sh_type;      <span class="comment">// 节类型</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_flags;     <span class="comment">// 节标志</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_addr;      <span class="comment">// 节在内存中的地址</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_offset;    <span class="comment">// 节在文件中的偏移</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_size;      <span class="comment">// 节的大小</span></span><br><span class="line">    <span class="type">uint32_t</span> sh_link;      <span class="comment">// 与节相关的索引</span></span><br><span class="line">    <span class="type">uint32_t</span> sh_info;      <span class="comment">// 额外信息</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_addralign; <span class="comment">// 节对齐</span></span><br><span class="line">    <span class="type">uint64_t</span> sh_entsize;   <span class="comment">// 节表项大小（如果节包含表）</span></span><br><span class="line">&#125; Elf64_Shdr;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>常见的节类型包括：</p>
+<ul>
+<li><code>SHT_NULL</code>：无效节头。</li>
+<li><code>SHT_PROGBITS</code>：程序数据。</li>
+<li><code>SHT_SYMTAB</code>：符号表。</li>
+<li><code>SHT_STRTAB</code>：字符串表。</li>
+<li><code>SHT_RELA</code>：带显式添加的重定位条目。</li>
+<li><code>SHT_NOBITS</code>：不占文件空间的节（如BSS段）。</li>
+</ul>
+<h3 id="常见的节（Sections）"><a href="#常见的节（Sections）" class="headerlink" title="常见的节（Sections）"></a>常见的节（Sections）</h3><p>节是实际的数据段或代码段。常见的节包括：</p>
+<ul>
+<li><code>.text</code>：代码段，包含可执行指令。</li>
+<li><code>.data</code>：数据段，包含已初始化的全局变量。</li>
+<li><code>.bss</code>：未初始化数据段，包含未初始化的全局变量，在文件中不占空间。</li>
+<li><code>.rodata</code>：只读数据段，包含只读的全局变量和常量。</li>
+<li><code>.symtab</code>：符号表，包含程序中的所有符号信息。</li>
+<li><code>.strtab</code>：字符串表，包含符号表和其他节中使用的字符串。</li>
+</ul>
+<p>可以使用 <code>readelf -S test.o</code> 查看段表结构</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">➜ readelf -S test.o</span><br><span class="line">There are 14 section headers, starting at offset 0x348:</span><br><span class="line"></span><br><span class="line">Section Headers:</span><br><span class="line">  [Nr] Name              Type            Address          Off    Size   ES Flg Lk Inf Al</span><br><span class="line">  [ 0]                   NULL            0000000000000000 000000 000000 00      0   0  0</span><br><span class="line">  [ 1] .text             PROGBITS        0000000000000000 000040 000032 00  AX  0   0  1</span><br><span class="line">  [ 2] .rela.text        RELA            0000000000000000 000270 000048 18   I 11   1  8</span><br><span class="line">  [ 3] .data             PROGBITS        0000000000000000 000072 000000 00  WA  0   0  1</span><br><span class="line">  [ 4] .bss              NOBITS          0000000000000000 000072 000000 00  WA  0   0  1</span><br><span class="line">  [ 5] .rodata           PROGBITS        0000000000000000 000072 00000f 00   A  0   0  1</span><br><span class="line">  [ 6] .comment          PROGBITS        0000000000000000 000081 00002c 01  MS  0   0  1</span><br><span class="line">  [ 7] .note.GNU-stack   PROGBITS        0000000000000000 0000ad 000000 00      0   0  1</span><br><span class="line">  [ 8] .note.gnu.property NOTE            0000000000000000 0000b0 000020 00   A  0   0  8</span><br><span class="line">  [ 9] .eh_frame         PROGBITS        0000000000000000 0000d0 000038 00   A  0   0  8</span><br><span class="line">  [10] .rela.eh_frame    RELA            0000000000000000 0002b8 000018 18   I 11   9  8</span><br><span class="line">  [11] .symtab           SYMTAB          0000000000000000 000108 000138 18     12  10  8</span><br><span class="line">  [12] .strtab           STRTAB          0000000000000000 000240 00002e 00      0   0  1</span><br><span class="line">  [13] .shstrtab         STRTAB          0000000000000000 0002d0 000074 00      0   0  1</span><br><span class="line">Key to Flags:</span><br><span class="line">  W (write), A (alloc), X (execute), M (merge), S (strings), I (info),</span><br><span class="line">  L (link order), O (extra OS processing required), G (group), T (TLS),</span><br><span class="line">  C (compressed), x (unknown), o (OS specific), E (exclude),</span><br><span class="line">  l (large), p (processor specific)</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="3-程序头部表"><a href="#3-程序头部表" class="headerlink" title="3. 程序头部表"></a>3. 程序头部表</h3><p>程序头部表描述了可执行文件或共享库如何被加载到内存中。每个条目称为一个程序头部（Program Header）。其结构定义如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> &#123;</span></span><br><span class="line">    <span class="type">uint32_t</span> p_type;   <span class="comment">// 段类型</span></span><br><span class="line">    <span class="type">uint32_t</span> p_flags;  <span class="comment">// 段标志</span></span><br><span class="line">    <span class="type">uint64_t</span> p_offset; <span class="comment">// 段在文件中的偏移</span></span><br><span class="line">    <span class="type">uint64_t</span> p_vaddr;  <span class="comment">// 段在内存中的虚拟地址</span></span><br><span class="line">    <span class="type">uint64_t</span> p_paddr;  <span class="comment">// 段在内存中的物理地址（用于物理内存管理）</span></span><br><span class="line">    <span class="type">uint64_t</span> p_filesz; <span class="comment">// 段在文件中的大小</span></span><br><span class="line">    <span class="type">uint64_t</span> p_memsz;  <span class="comment">// 段在内存中的大小</span></span><br><span class="line">    <span class="type">uint64_t</span> p_align;  <span class="comment">// 段对齐</span></span><br><span class="line">&#125; Elf64_Phdr;</span><br></pre></td></tr></table></figure>
+
+<p>常见的段类型包括：</p>
+<ul>
+<li><code>PT_LOAD</code>：可加载段。</li>
+<li><code>PT_DYNAMIC</code>：动态链接信息。</li>
+<li><code>PT_INTERP</code>：解释器路径。</li>
+<li><code>PT_NOTE</code>：附加信息。</li>
+<li><code>PT_PHDR</code>：包含程序头部表本身。</li>
+</ul>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-ELF-%E5%88%86%E7%B1%BB"><span class="toc-number">1.</span> <span class="toc-text">1. ELF 分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-ELF-%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%8F%8F%E8%BF%B0"><span class="toc-number">2.</span> <span class="toc-text">2. ELF 文件结构描述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-ELF-%E6%96%87%E4%BB%B6%E5%A4%B4"><span class="toc-number">2.1.</span> <span class="toc-text">1. ELF 文件头</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%AE%B5%E8%A1%A8%EF%BC%88Section-Header-Table%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">2. 段表（Section Header Table）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E7%9A%84%E8%8A%82%EF%BC%88Sections%EF%BC%89"><span class="toc-number">2.3.</span> <span class="toc-text">常见的节（Sections）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E7%A8%8B%E5%BA%8F%E5%A4%B4%E9%83%A8%E8%A1%A8"><span class="toc-number">2.4.</span> <span class="toc-text">3. 程序头部表</span></a></li></ol></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&text=ELF文件结构源码剖析"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&is_video=false&description=ELF文件结构源码剖析"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=ELF文件结构源码剖析&body=Check out this article: http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&title=ELF文件结构源码剖析"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&name=ELF文件结构源码剖析&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/06/15/ELF%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84%E6%BA%90%E7%A0%81%E5%89%96%E6%9E%90/&t=ELF文件结构源码剖析"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    desmoscook
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
