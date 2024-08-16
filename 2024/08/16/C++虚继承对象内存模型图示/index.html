@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang=en>
+<head>
+    <!-- so meta -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+    <meta name="description" content="本文主要是针对 陈皓老师的内存布局的讲解补充图示，具体文章见 C++ 对象的内存布局（上）_虚函数表和虚基类表C++ 对象的内存布局（下）_haoel 以及这位老师根据陈皓老师的文章，使用 vs 的内存对象字符图展示了具体的内存布局，也写的非常的优秀。 C++ 对象的内存布局（上）—陈皓改进版_陈皓 c++对象模型C++ 对象的内存布局（下）—陈皓改进版_pragma vtordisp(off)">
+<meta property="og:type" content="article">
+<meta property="og:title" content="C++虚继承对象内存模型图示">
+<meta property="og:url" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/index.html">
+<meta property="og:site_name" content="desmoscook">
+<meta property="og:description" content="本文主要是针对 陈皓老师的内存布局的讲解补充图示，具体文章见 C++ 对象的内存布局（上）_虚函数表和虚基类表C++ 对象的内存布局（下）_haoel 以及这位老师根据陈皓老师的文章，使用 vs 的内存对象字符图展示了具体的内存布局，也写的非常的优秀。 C++ 对象的内存布局（上）—陈皓改进版_陈皓 c++对象模型C++ 对象的内存布局（下）—陈皓改进版_pragma vtordisp(off)">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BFUML%E5%9B%BE.png">
+<meta property="og:image" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E5%8D%95%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png">
+<meta property="og:image" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E5%A4%9A%E9%87%8D%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png">
+<meta property="og:image" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png">
+<meta property="article:published_time" content="2024-08-16T14:13:31.000Z">
+<meta property="article:modified_time" content="2024-08-16T15:23:15.152Z">
+<meta property="article:author" content="desmoscook">
+<meta property="article:tag" content="C++">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BFUML%E5%9B%BE.png">
+    
+    
+      
+        
+          <link rel="shortcut icon" href="/images/favicon.ico">
+        
+      
+      
+        
+          <link rel="icon" type="image/png" href="/images/favicon-192x192.png" sizes="192x192">
+        
+      
+      
+        
+          <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
+        
+      
+    
+    <!-- title -->
+    <title>C++虚继承对象内存模型图示</title>
+    <!-- async scripts -->
+    <!-- Google Analytics -->
+
+
+    <!-- Umami Analytics -->
+
+
+    <!-- styles -->
+    
+<link rel="stylesheet" href="/css/style.css">
+
+    <!-- persian styles -->
+    
+    <!-- rss -->
+    
+    
+	<!-- mathjax -->
+	
+<meta name="generator" content="Hexo 6.3.0"></head>
+
+<body class="max-width mx-auto px3 ltr">
+    
+      <div id="header-post">
+  <a id="menu-icon" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="menu-icon-tablet" href="#" aria-label="Menu"><i class="fa-solid fa-bars fa-lg"></i></a>
+  <a id="top-icon-tablet" href="#" aria-label="Top" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');" style="display:none;"><i class="fa-solid fa-chevron-up fa-lg"></i></a>
+  <span id="menu">
+    <span id="nav">
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </span>
+    <br/>
+    <span id="actions">
+      <ul>
+        
+        
+        <li><a class="icon" aria-label="Next post" href="/2024/08/16/Excalidraw/%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.excalidraw/"><i class="fa-solid fa-chevron-right" aria-hidden="true" onmouseover="$('#i-next').toggle();" onmouseout="$('#i-next').toggle();"></i></a></li>
+        
+        <li><a class="icon" aria-label="Back to top" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up" aria-hidden="true" onmouseover="$('#i-top').toggle();" onmouseout="$('#i-top').toggle();"></i></a></li>
+        <li><a class="icon" aria-label="Share post" href="#"><i class="fa-solid fa-share-alt" aria-hidden="true" onmouseover="$('#i-share').toggle();" onmouseout="$('#i-share').toggle();" onclick="$('#share').toggle();return false;"></i></a></li>
+      </ul>
+      <span id="i-prev" class="info" style="display:none;">Previous post</span>
+      <span id="i-next" class="info" style="display:none;">Next post</span>
+      <span id="i-top" class="info" style="display:none;">Back to top</span>
+      <span id="i-share" class="info" style="display:none;">Share post</span>
+    </span>
+    <br/>
+    <div id="share" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/"><i class="fab fa-facebook " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&text=C++虚继承对象内存模型图示"><i class="fab fa-twitter " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-linkedin " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&is_video=false&description=C++虚继承对象内存模型图示"><i class="fab fa-pinterest " aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++虚继承对象内存模型图示&body=Check out this article: http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/"><i class="fa-solid fa-envelope " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-get-pocket " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-reddit " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-stumbleupon " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-digg " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&name=C++虚继承对象内存模型图示&description="><i class="fab fa-tumblr " aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&t=C++虚继承对象内存模型图示"><i class="fab fa-hacker-news " aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+    
+    
+      <div id="toc">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95%E4%B8%80%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">1.</span> <span class="toc-text">单一虚继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">2.</span> <span class="toc-text">多虚继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">3.</span> <span class="toc-text">菱形虚继承</span></a></li></ol>
+      </div>
+    
+  </span>
+</div>
+
+    
+    <div class="content index py4 ">
+        
+        <article class="post h-entry" itemscope itemtype="http://schema.org/BlogPosting">
+  <header>
+    
+    <h1 class="posttitle p-name" itemprop="name headline">
+        C++虚继承对象内存模型图示
+    </h1>
+
+
+
+    <div class="meta">
+      <span class="author p-author h-card" itemprop="author" itemscope itemtype="http://schema.org/Person">
+        <span class="p-name" itemprop="name">desmoscook</span>
+      </span>
+      
+    <div class="postdate">
+      
+        <time datetime="2024-08-16T14:13:31.000Z" class="dt-published" itemprop="datePublished">2024-08-16</time>
+        
+      
+    </div>
+
+
+      
+
+      
+    <div class="article-tag">
+        <i class="fa-solid fa-tag"></i>
+        <a class="p-category" href="/tags/C/" rel="tag">C++</a>
+    </div>
+
+
+    </div>
+  </header>
+  
+
+  <div class="content e-content" itemprop="articleBody">
+    <p>本文主要是针对 陈皓老师的内存布局的讲解补充图示，具体文章见</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/haoel/article/details/3081328">C++ 对象的内存布局（上）_虚函数表和虚基类表</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/haoel/article/details/3081385">C++ 对象的内存布局（下）_haoel</a></p>
+<p>以及这位老师根据陈皓老师的文章，使用 <code>vs</code> 的内存对象字符图展示了具体的内存布局，也写的非常的优秀。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/a3192048/article/details/82259966">C++ 对象的内存布局（上）—陈皓改进版_陈皓 c++对象模型</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/a3192048/article/details/82261754">C++ 对象的内存布局（下）—陈皓改进版_pragma vtordisp(off)</a></p>
+<p>下面我主要针对陈皓老师偷懒的菱形虚继承进行图示补充。</p>
+<p><img src="/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BFUML%E5%9B%BE.png"></p>
+<h2 id="单一虚继承"><a href="#单一虚继承" class="headerlink" title="单一虚继承"></a>单一虚继承</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ib;</span><br><span class="line">  <span class="type">char</span> cb;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">Base</span>() : <span class="built_in">ib</span>(<span class="number">0</span>), <span class="built_in">cb</span>(<span class="string">&#x27;B&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Bf</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base::Bf()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base1</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> Base &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ib1;</span><br><span class="line">  <span class="type">char</span> cb1;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">Base1</span>() : <span class="built_in">ib1</span>(<span class="number">11</span>), <span class="built_in">cb1</span>(<span class="string">&#x27;1&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::f1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Bf1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::Bf1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>其中</p>
+<ul>
+<li><code>Base</code> 类的 <strong>虚基类子对象</strong> 存放在 <code>Base1</code> 类的末尾（地址 <code>12</code>）</li>
+<li>同时 <code>Base1</code> 中使用 <code>vbptr</code> 指针指向 虚基类表（地址 <code>4</code>）</li>
+<li>虚基类表中存放的是 虚基类子对象 相对 <code>vbptr</code> 的偏移量</li>
+</ul>
+<p>图中 虚基类子对象的起始地址是 <code>16</code>，而 <code>vbptr</code> 的地址为 <code>4</code>，所以虚基表中应该存储的的偏移量为 <code>16 - 4 = 12</code></p>
+<p><img src="/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E5%8D%95%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png"></p>
+<h2 id="多虚继承"><a href="#多虚继承" class="headerlink" title="多虚继承"></a>多虚继承</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">Base1</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ibase1;</span><br><span class="line">  <span class="built_in">Base1</span>() : <span class="built_in">ibase1</span>(<span class="number">10</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">g</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::g()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">h</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base1::h()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base2</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ibase2;</span><br><span class="line">  <span class="built_in">Base2</span>() : <span class="built_in">ibase2</span>(<span class="number">20</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base2::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">g</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base2::g()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">h</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base2::h()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Base3</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ibase3;</span><br><span class="line">  <span class="built_in">Base3</span>() : <span class="built_in">ibase3</span>(<span class="number">30</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base3::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">g</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base3::g()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">h</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Base3::h()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">Derive</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> Base1,</span><br><span class="line">               <span class="keyword">virtual</span> <span class="keyword">public</span> Base2,</span><br><span class="line">               <span class="keyword">virtual</span> <span class="keyword">public</span> Base3 &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ibase1;</span><br><span class="line">  <span class="type">int</span> iderive;</span><br><span class="line">  <span class="built_in">Derive</span>() : <span class="built_in">iderive</span>(<span class="number">100</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Derive::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">g1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;Derive::g1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>注：这里图示展示的 <code>Derive</code> 的内存地址和 <a target="_blank" rel="noopener" href="https://blog.csdn.net/a3192048/article/details/82261754">C++ 对象的内存布局（下）—陈皓改进版_pragma vtordisp(off)-CSDN博客</a> 中展示的不同，是因为图示展示的是关闭了 <code>vtordisp</code> 之后的内存模型。</p>
+<p><img src="/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E5%A4%9A%E9%87%8D%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png"></p>
+<h2 id="菱形虚继承"><a href="#菱形虚继承" class="headerlink" title="菱形虚继承"></a>菱形虚继承</h2><p>菱形虚继承源码</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">B</span> &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ib;</span><br><span class="line">  <span class="type">char</span> cb;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">B</span>() : <span class="built_in">ib</span>(<span class="number">0</span>), <span class="built_in">cb</span>(<span class="string">&#x27;B&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Bf</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B::Bf()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B1</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> B &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ib1;</span><br><span class="line">  <span class="type">char</span> cb1;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">B1</span>() : <span class="built_in">ib1</span>(<span class="number">11</span>), <span class="built_in">cb1</span>(<span class="string">&#x27;1&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B1::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B1::f1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Bf1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B1::Bf1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">B2</span> : <span class="keyword">virtual</span> <span class="keyword">public</span> B &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> ib2;</span><br><span class="line">  <span class="type">char</span> cb2;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">B2</span>() : <span class="built_in">ib2</span>(<span class="number">12</span>), <span class="built_in">cb2</span>(<span class="string">&#x27;2&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B2::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f2</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B2::f2()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Bf2</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;B2::Bf2()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">class</span> <span class="title class_">D</span> : <span class="keyword">public</span> B1, <span class="keyword">public</span> B2 &#123;</span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="type">int</span> id;</span><br><span class="line">  <span class="type">char</span> cd;</span><br><span class="line"></span><br><span class="line"> <span class="keyword">public</span>:</span><br><span class="line">  <span class="built_in">D</span>() : <span class="built_in">id</span>(<span class="number">100</span>), <span class="built_in">cd</span>(<span class="string">&#x27;D&#x27;</span>) &#123;&#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;D::f()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f1</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;D::f1()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">f2</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;D::f2()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="type">void</span> <span class="title">Df</span><span class="params">()</span> </span>&#123; cout &lt;&lt; <span class="string">&quot;D::Df()&quot;</span> &lt;&lt; endl; &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>菱形虚继承的虚基表和单虚继承相同的计算方法，这里就不再赘述。</p>
+<p><img src="/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BF%E5%9B%BE%E7%A4%BA.png"></p>
+
+  </div>
+</article>
+
+
+
+        
+          <div id="footer-post-container">
+  <div id="footer-post">
+
+    <div id="nav-footer" style="display: none">
+      <ul>
+        
+          <li><a href="/">Home</a></li>
+        
+          <li><a href="/archives/">Writing</a></li>
+        
+          <li><a href="/tags/">Tag</a></li>
+        
+          <li><a href="/categories/">Category</a></li>
+        
+      </ul>
+    </div>
+
+    
+    
+      <div id="toc-footer" style="display: none">
+        <ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%95%E4%B8%80%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">1.</span> <span class="toc-text">单一虚继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">2.</span> <span class="toc-text">多虚继承</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%8F%B1%E5%BD%A2%E8%99%9A%E7%BB%A7%E6%89%BF"><span class="toc-number">3.</span> <span class="toc-text">菱形虚继承</span></a></li></ol>
+      </div>
+    
+
+    <div id="share-footer" style="display: none">
+      <ul>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.facebook.com/sharer.php?u=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/"><i class="fab fa-facebook fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://twitter.com/share?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&text=C++虚继承对象内存模型图示"><i class="fab fa-twitter fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.linkedin.com/shareArticle?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-linkedin fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://pinterest.com/pin/create/bookmarklet/?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&is_video=false&description=C++虚继承对象内存模型图示"><i class="fab fa-pinterest fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" href="mailto:?subject=C++虚继承对象内存模型图示&body=Check out this article: http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/"><i class="fa-solid fa-envelope fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://getpocket.com/save?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-get-pocket fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://reddit.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-reddit fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.stumbleupon.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-stumbleupon fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://digg.com/submit?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&title=C++虚继承对象内存模型图示"><i class="fab fa-digg fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="http://www.tumblr.com/share/link?url=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&name=C++虚继承对象内存模型图示&description="><i class="fab fa-tumblr fa-lg" aria-hidden="true"></i></a></li>
+  <li><a class="icon" target="_blank" rel="noopener" href="https://news.ycombinator.com/submitlink?u=http://desmoscook.github.io/2024/08/16/C++%E8%99%9A%E7%BB%A7%E6%89%BF%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE%E7%A4%BA/&t=C++虚继承对象内存模型图示"><i class="fab fa-hacker-news fa-lg" aria-hidden="true"></i></a></li>
+</ul>
+
+    </div>
+
+    <div id="actions-footer">
+        <a id="menu" class="icon" href="#" onclick="$('#nav-footer').toggle();return false;"><i class="fa-solid fa-bars fa-lg" aria-hidden="true"></i> Menu</a>
+        
+          <a id="toc" class="icon" href="#" onclick="$('#toc-footer').toggle();return false;"><i class="fa-solid fa-list fa-lg" aria-hidden="true"></i> TOC</a>
+        
+        <a id="share" class="icon" href="#" onclick="$('#share-footer').toggle();return false;"><i class="fa-solid fa-share-alt fa-lg" aria-hidden="true"></i> Share</a>
+        <a id="top" style="display:none" class="icon" href="#" onclick="$('html, body').animate({ scrollTop: 0 }, 'fast');"><i class="fa-solid fa-chevron-up fa-lg" aria-hidden="true"></i> Top</a>
+    </div>
+
+  </div>
+</div>
+
+        
+        <footer id="footer">
+  <div class="footer-left">
+    Copyright &copy;
+    
+    
+    2016-2024
+    desmoscook
+  </div>
+  <div class="footer-right">
+    <nav>
+      <ul>
+        <!--
+       --><li><a href="/">Home</a></li><!--
+     --><!--
+       --><li><a href="/archives/">Writing</a></li><!--
+     --><!--
+       --><li><a href="/tags/">Tag</a></li><!--
+     --><!--
+       --><li><a href="/categories/">Category</a></li><!--
+     -->
+      </ul>
+    </nav>
+  </div>
+</footer>
+
+    </div>
+    <!-- styles -->
+
+
+
+  <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" onload="this.onload=null;this.rel='stylesheet'"/>
+
+
+    <!-- jquery -->
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" crossorigin="anonymous"></script>
+
+
+
+
+<!-- clipboard -->
+
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.7/clipboard.min.js" crossorigin="anonymous"></script>
+  
+  <script type="text/javascript">
+  $(function() {
+    // copy-btn HTML
+    var btn = "<span class=\"btn-copy tooltipped tooltipped-sw\" aria-label=\"Copy to clipboard!\">";
+    btn += '<i class="fa-regular fa-clone"></i>';
+    btn += '</span>';
+    // mount it!
+    $(".highlight table").before(btn);
+    var clip = new ClipboardJS('.btn-copy', {
+      text: function(trigger) {
+        return Array.from(trigger.nextElementSibling.querySelectorAll('.code')).reduce((str,it)=>str+it.innerText+'\n','')
+      }
+    });
+    clip.on('success', function(e) {
+      e.trigger.setAttribute('aria-label', "Copied!");
+      e.clearSelection();
+    })
+  })
+  </script>
+
+
+<script src="/js/main.js"></script>
+
+<!-- search -->
+
+<!-- Baidu Analytics -->
+
+<!-- Cloudflare Analytics -->
+
+<!-- Disqus Comments -->
+
+<!-- utterances Comments -->
+
+</body>
+</html>
